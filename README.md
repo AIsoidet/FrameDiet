@@ -83,7 +83,7 @@ A 6 s clip with one 0.3 s black flash, checked with `fdiet qa`:
 
 ```text
 [QA WARN] | duration=6.000s | video=360x640 | fps=30.000 | black=1 | freeze=0 | crop_observed=360x640+0+0 | audio_peak=-28.1dBFS | clipped_samples=unavailable
-- black intervals: 1 (from 00:00:02.000 - 00:00:02.333)
+- black intervals: 1 (00:00:02.000 - 00:00:02.333 (0.33s))
 ```
 
 A WhisperX segment with one untimed token, through `fdiet json`:
@@ -99,7 +99,16 @@ Both outputs were produced by the current version on a generated clip and a hand
 
 ### Layer 1: check a render (QA and vision)
 
-**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Without flags it always exits 0, even on `WARN`, so an agent can read the verdict. Add `--strict` and it exits 1 on `WARN`, so a render script or CI job can fail on its own (invalid input or a missing FFmpeg exits 2). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others). Intentional pauses and held title cards can trigger freeze warnings; raise `--freeze-min-duration` for slow-paced videos. `cropdetect` reports removable borders, not a content bounding box.
+**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Without flags it always exits 0, even on `WARN`, so an agent can read the verdict. Add `--strict` and it exits 1 on `WARN`, so a render script or CI job can fail on its own (invalid input or a missing FFmpeg exits 2). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others).
+
+Motion graphics hold still on purpose, so stills and black are split into warnings and `note:` lines. Notes never change `PASS`/`WARN` or the `--strict` exit code:
+
+- a still or black interval touching the first or last 0.5 s and no longer than 3 s is noted as a likely title card, end card or fade;
+- a still in the middle shorter than `--freeze-warn-duration` (default 0.75 s) is noted as a likely held beat;
+- touching intervals are merged first, because FFmpeg can split one long still in two;
+- anything covering half the video is always a warning.
+
+On the channel's published PixelFX reel this turned 4 freeze warnings into notes (`PASS`). On a diagram animation (`flow.mp4`, 10 fps) one 1.1 s pause still warns. The defect clips still give all 4 injected defects as warnings. The 0.75 s default comes from these two videos, not from a survey; change it for your pacing. `cropdetect` reports removable borders, not a content bounding box.
 
 **`fdiet sheet <video> --grid 3x3`** builds a timestamped contact sheet. It reduces the number of images, but small details are harder to see in a grid, and in our test a 3x3 sheet did not show a 0.2 s black flash. Use it for overall structure, and `qa` for defects. Existing files are not overwritten without `--overwrite`. If your FFmpeg build has no default font, pass `--font-file`.
 
@@ -146,7 +155,7 @@ Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, de
 
 - Tokens: `cl100k_base` through `tiktoken` as a stand-in. Claude's tokenizer is different, so absolute counts differ; ratios are indicative.
 - Images: tokens from the documented `ceil(w/28) x ceil(h/28)` rule with the published resize limits (1568 px / 1568 tokens standard; 2576 px / 4784 tokens high-resolution tier). Estimates, not measurements.
-- Detection tests use a ground-truth clip with known injected defects and a control clip. The control showed false positives (freeze warnings on pauses that were intentional), which is why thresholds are exposed.
+- Detection tests use a ground-truth clip with known injected defects and a control clip. The control showed false positives (freeze warnings on pauses that were intentional); since then likely holds are reported as notes (see `qa` above), and thresholds are exposed.
 - Everything is one project's output. Treat the figures as evidence that the mechanism works, and run `bench/*.py` on your own material before relying on them.
 
 ## Scope and limitations

@@ -68,6 +68,7 @@ class VideoQAReport:
     audio_peak_dbfs: float | None
     clipped_samples: int | None
     warnings: tuple[str, ...]
+    notes: tuple[str, ...] = ()
 
     @property
     def status(self) -> str:
@@ -86,6 +87,7 @@ class VideoQAReport:
             "audio_peak_dbfs": self.audio_peak_dbfs,
             "clipped_samples": self.clipped_samples,
             "warnings": list(self.warnings),
+            "notes": list(self.notes),
         }
 
     def to_text(self) -> str:
@@ -115,10 +117,9 @@ class VideoQAReport:
         else:
             parts.append("audio=none")
         summary = " | ".join(parts)
-        if not self.warnings:
-            return summary
-        details = "\n".join(f"- {warning}" for warning in self.warnings)
-        return summary + "\n" + details
+        details = [f"- {warning}" for warning in self.warnings]
+        details.extend(f"- note: {note}" for note in self.notes)
+        return "\n".join([summary, *details])
 
 
 def _resolve_tools(ffmpeg_path: str | None, ffprobe_path: str | None) -> tuple[str, str]:
@@ -247,6 +248,96 @@ def _format_time(seconds: float) -> str:
     return f"{hours:02}:{minutes:02}:{whole_seconds:02}.{millis:03}"
 
 
+EDGE_SECONDS = 0.5
+MAX_EDGE_HOLD_SECONDS = 3.0
+
+
+def _span(item: TimeInterval, duration: float) -> tuple[float, float]:
+    end = item.end if item.end is not None else duration
+    return item.start, max(item.start, end)
+
+
+def _describe(items: list[TimeInterval], duration: float) -> str:
+    shown = ", ".join(
+        f"{_format_time(start)} - {_format_time(end)} ({end - start:.2f}s)"
+        for start, end in (_span(item, duration) for item in items[:5])
+    )
+    more = f", +{len(items) - 5} more" if len(items) > 5 else ""
+    return shown + more
+
+
+def _merge_adjacent(items: tuple[TimeInterval, ...], duration: float, gap: float = 0.05) -> list[TimeInterval]:
+    """Join intervals that touch: FFmpeg may split one long still into two."""
+    merged: list[TimeInterval] = []
+    for item in sorted(items, key=lambda value: value.start):
+        if merged:
+            last_start, last_end = _span(merged[-1], duration)
+            if merged[-1].end is not None and item.start - last_end <= gap:
+                end = item.end
+                merged[-1] = TimeInterval(
+                    start=last_start, end=end,
+                    duration=None if end is None else end - last_start,
+                )
+                continue
+        merged.append(item)
+    return merged
+
+
+def classify_intervals(
+    black: tuple[TimeInterval, ...],
+    freezes: tuple[TimeInterval, ...],
+    duration: float,
+    freeze_warn_duration: float = 0.75,
+) -> tuple[list[str], list[str]]:
+    """Split detections into warnings and notes about likely intentional shots.
+
+    A still or black interval touching the start or end (title card, end card,
+    fade) and no longer than 3 s is a note, and so is a still in the middle
+    shorter than ``freeze_warn_duration`` (a held beat in motion graphics).
+    Everything else, and anything covering half the video, is a warning.
+    Notes are still printed: the tool cannot know what was intended.
+    """
+    def at_edge(item: TimeInterval) -> bool:
+        start, end = _span(item, duration)
+        return (start <= EDGE_SECONDS or end >= duration - EDGE_SECONDS) and end - start <= MAX_EDGE_HOLD_SECONDS
+
+    def most_of_video(item: TimeInterval) -> bool:
+        start, end = _span(item, duration)
+        return end - start >= duration / 2
+
+    warnings: list[str] = []
+    notes: list[str] = []
+    black, freezes = _merge_adjacent(black, duration), _merge_adjacent(freezes, duration)
+
+    black_warn = [item for item in black if most_of_video(item) or not at_edge(item)]
+    black_edge = [item for item in black if item not in black_warn]
+    if black_warn:
+        warnings.append(f"black intervals: {len(black_warn)} ({_describe(black_warn, duration)})")
+    if black_edge:
+        notes.append(f"black at start/end, likely a fade: {_describe(black_edge, duration)}")
+
+    freeze_warn, freeze_edge, freeze_short = [], [], []
+    for item in freezes:
+        start, end = _span(item, duration)
+        if most_of_video(item):
+            freeze_warn.append(item)
+        elif at_edge(item):
+            freeze_edge.append(item)
+        elif end - start < freeze_warn_duration:
+            freeze_short.append(item)
+        else:
+            freeze_warn.append(item)
+    if freeze_warn:
+        warnings.append(f"freeze intervals: {len(freeze_warn)} ({_describe(freeze_warn, duration)})")
+    if freeze_edge:
+        notes.append(f"still at start/end, likely a title or end card: {_describe(freeze_edge, duration)}")
+    if freeze_short:
+        notes.append(
+            f"short stills under {freeze_warn_duration:g}s, likely held beats: {_describe(freeze_short, duration)}"
+        )
+    return warnings, notes
+
+
 def run_video_qa(
     video_path: str | Path,
     *,
@@ -260,6 +351,7 @@ def run_video_qa(
     timeout: float | None = 1800,
     ffmpeg_path: str | None = None,
     ffprobe_path: str | None = None,
+    freeze_warn_duration: float = 0.75,
 ) -> VideoQAReport:
     """Run black/freeze/crop and optional audio checks against one video.
 
@@ -282,11 +374,12 @@ def run_video_qa(
         "freeze_noise_db": freeze_noise_db,
         "audio_silence_warn_dbfs": audio_silence_warn_dbfs,
         "audio_peak_warn_dbfs": audio_peak_warn_dbfs,
+        "freeze_warn_duration": freeze_warn_duration,
     }
     if any(not math.isfinite(value) for value in numeric.values()):
         raise ValueError("QA thresholds must be finite numbers")
-    if black_min_duration <= 0 or freeze_min_duration <= 0:
-        raise ValueError("black_min_duration and freeze_min_duration must be positive")
+    if black_min_duration <= 0 or freeze_min_duration <= 0 or freeze_warn_duration < 0:
+        raise ValueError("black/freeze durations must be positive (freeze_warn_duration may be 0)")
     if not 0 < black_pixel_threshold <= 1:
         raise ValueError("black_pixel_threshold must be in (0, 1]")
     if not -120 <= freeze_noise_db <= 0:
@@ -334,21 +427,7 @@ def run_video_qa(
     crops = _parse_crop_observations(log)
     peak, clipped = _parse_audio_metrics(log) if audio_streams else (None, None)
 
-    warnings: list[str] = []
-    if black:
-        sample = ", ".join(
-            f"{_format_time(item.start)}"
-            + (f" - {_format_time(item.end)}" if item.end is not None else " - end")
-            for item in black[:5]
-        )
-        warnings.append(f"black intervals: {len(black)} (from {sample})")
-    if freezes:
-        sample = ", ".join(
-            f"{_format_time(item.start)}"
-            + (f" - {_format_time(item.end)}" if item.end is not None else " - ongoing")
-            for item in freezes[:5]
-        )
-        warnings.append(f"freeze intervals: {len(freezes)} (from {sample})")
+    warnings, notes = classify_intervals(black, freezes, duration, freeze_warn_duration)
     if audio_streams:
         if peak is None:
             warnings.append("audio peak could not be parsed from FFmpeg astats output")
@@ -374,4 +453,5 @@ def run_video_qa(
         audio_peak_dbfs=peak,
         clipped_samples=clipped,
         warnings=tuple(warnings),
+        notes=tuple(notes),
     )

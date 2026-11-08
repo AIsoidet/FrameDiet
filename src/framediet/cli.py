@@ -251,6 +251,7 @@ def _build_parser() -> argparse.ArgumentParser:
     qa_parser.add_argument("--black-min-duration", type=float, default=0.1, help="Minimum black interval in seconds")
     qa_parser.add_argument("--black-pixel-threshold", type=float, default=0.10, help="Black pixel threshold in (0, 1]")
     qa_parser.add_argument("--freeze-min-duration", type=float, default=0.5, help="Minimum low-motion interval in seconds")
+    qa_parser.add_argument("--freeze-warn-duration", type=float, default=0.75, help="Mid-video stills shorter than this are notes (held beats), not warnings")
     qa_parser.add_argument("--freeze-noise-db", type=float, default=-60.0, help="Freeze detector noise threshold in dB")
     qa_parser.add_argument("--crop-limit", type=int, default=24, help="FFmpeg cropdetect threshold")
     qa_parser.add_argument("--audio-silence-warn-dbfs", type=float, default=-60.0, help="Warn at or below this audio peak")
@@ -342,6 +343,7 @@ def main() -> None:
                 black_min_duration=args.black_min_duration,
                 black_pixel_threshold=args.black_pixel_threshold,
                 freeze_min_duration=args.freeze_min_duration,
+                freeze_warn_duration=args.freeze_warn_duration,
                 freeze_noise_db=args.freeze_noise_db,
                 crop_limit=args.crop_limit,
                 audio_silence_warn_dbfs=args.audio_silence_warn_dbfs,

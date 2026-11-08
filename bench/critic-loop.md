@@ -41,7 +41,7 @@ Reading the table:
 - "Covered" means the evidence is in the images, not that a model notices it. A 0.2 s black frame among 30 small tiles is easy to see; five identical tiles in a row are easy to miss. We did not test this.
 - Audio is in no frame. Neither skill's image path can see it; mvk's `loudness.sh` could, if the agent runs it.
 - Vision tokens use the same estimate as `frames-vs-qa.md` (`ceil(w/28) x ceil(h/28)`, 1568 px side, 1568 tokens). One mvk sheet is 2880x4265 and is downscaled to about 1058x1568, so each tile reaches the model at roughly 176x313 px. remotion-director page sizes are computed from constants in the code (width 1164) with an estimated header height, so its token figure is approximate.
-- `fdiet qa` on this regenerated clip reported the 4 injected defects plus 4 other freeze intervals at 11.97-12.50, 17.27-17.80, 18.20-18.87 and 24.90 s to end. These are hold intervals in the source reel with no label, as in the earlier benchmark. The audio peak reads +2.7 dBFS here, not the +1.0 in the earlier run, because the gain was applied by a different command.
+- `fdiet qa` on this regenerated clip reported the 4 injected defects plus 4 other freeze intervals at 11.97-12.50, 17.27-17.80, 18.20-18.87 and 24.90 s to end. These are hold intervals in the source reel with no label, as in the earlier benchmark. Since the hold notes were added (same day), those four are printed as `note:` lines and only the 4 injected defects are warnings. The audio peak reads +2.7 dBFS here, not the +1.0 in the earlier run, because the gain was applied by a different command.
 
 ## Limits
 
