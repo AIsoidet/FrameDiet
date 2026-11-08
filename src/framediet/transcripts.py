@@ -51,6 +51,21 @@ def _format_time(seconds_value: Any, milliseconds_value: Any, unit: str) -> str:
     return str(ms) if unit == "ms" else f"{ms / 1000:.3f}"
 
 
+UNKNOWN_TIME = "?"
+
+
+def _format_optional_time(item: dict[str, Any], key: str, unit: str) -> str:
+    """Format a start/end value, or ``?`` when the source has no timing for it.
+
+    WhisperX leaves ``start``/``end`` off words it could not align (for example
+    some numbers). Writing ``0`` for those would present a made-up timestamp.
+    """
+    seconds_value, milliseconds_value = item.get(key), item.get(f"{key}Ms")
+    if seconds_value is None and milliseconds_value is None:
+        return UNKNOWN_TIME
+    return _format_time(seconds_value, milliseconds_value, unit)
+
+
 def _format_word(value: Any) -> str:
     word = str(value).strip()
     # Keep the compact bare form for ordinary tokens and quote ambiguous text.
@@ -67,9 +82,19 @@ def _format_word(value: Any) -> str:
 
 def _word_token(item: dict[str, Any], unit: str) -> str:
     text = item.get("word", item.get("text", ""))
-    start = _format_time(item.get("start"), item.get("startMs"), unit)
-    end = _format_time(item.get("end"), item.get("endMs"), unit)
+    start = _format_optional_time(item, "start", unit)
+    end = _format_optional_time(item, "end", unit)
+    if start == UNKNOWN_TIME and end == UNKNOWN_TIME:
+        return f"{_format_word(text)}[{UNKNOWN_TIME}]"
     return f"{_format_word(text)}[{start}-{end}]"
+
+
+def _with_unknown_note(lines: list[str]) -> str:
+    """Join lines; explain ``?`` in the header only when the body uses it."""
+    body = "\n".join(lines[1:])
+    if re.search(r"\[\?\]|\[\?-|-\?\]", body):
+        lines = [lines[0] + "; ?=no timing in source"] + lines[1:]
+    return "\n".join(lines)
 
 
 def compress_whisper(data: str | Path | dict[str, Any] | list[Any], unit: str = "ms") -> str:
@@ -90,7 +115,7 @@ def compress_whisper(data: str | Path | dict[str, Any] | list[Any], unit: str = 
     if isinstance(raw, list):
         tokens = [_word_token(item, unit) for item in raw if isinstance(item, dict)]
         lines.append(" ".join(tokens))
-        return "\n".join(lines)
+        return _with_unknown_note(lines)
     if not isinstance(raw, dict):
         raise ValueError("Transcript JSON must be an object or a list of caption objects")
 
@@ -99,17 +124,19 @@ def compress_whisper(data: str | Path | dict[str, Any] | list[Any], unit: str = 
         for segment in segments:
             if not isinstance(segment, dict):
                 continue
-            start = _format_time(segment.get("start"), segment.get("startMs"), unit)
-            end = _format_time(segment.get("end"), segment.get("endMs"), unit)
+            start = _format_optional_time(segment, "start", unit)
+            end = _format_optional_time(segment, "end", unit)
+            speaker = segment.get("speaker")
+            label = f"{start}-{end}" + (f" {speaker}" if isinstance(speaker, str) and speaker else "")
             words = segment.get("words")
             if isinstance(words, list) and words:
                 tokens = [_word_token(word, unit) for word in words if isinstance(word, dict)]
-                lines.append(f"[{start}-{end}] " + " ".join(tokens))
+                lines.append(f"[{label}] " + " ".join(tokens))
             else:
-                lines.append(f"[{start}-{end}] {str(segment.get('text', '')).strip()}")
-        return "\n".join(lines)
+                lines.append(f"[{label}] {str(segment.get('text', '')).strip()}")
+        return _with_unknown_note(lines)
 
     words = raw.get("words")
     if isinstance(words, list):
         lines.append(" ".join(_word_token(word, unit) for word in words if isinstance(word, dict)))
-    return "\n".join(lines)
+    return _with_unknown_note(lines)
