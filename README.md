@@ -1,161 +1,123 @@
 # FrameDiet
 
-**Deterministic video QA and compact media context for code-driven video workflows.** Built by AI soidet.
+**Deterministic video QA and compact media context for agents that make video with code** (Remotion, HyperFrames, FFmpeg, Whisper).
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-54%20passing-brightgreen.svg)](tests)
 
-General-purpose CLI compressors such as [token-saver](https://github.com/ppgranger/token-saver) and [RTK](https://github.com/rtk-ai/rtk) reduce routine command output. FrameDiet focuses on media artifacts that benefit from purpose-built handling: render logs, word-aligned captions, video frame previews, and large embedded assets in HTML/SVG.
+When an AI agent renders and checks a video, most of its context goes to things a script could answer: per-frame render logs, dozens of screenshots to find a black frame, word-level caption JSON. FrameDiet is a small CLI that gives the agent the answer instead of the raw material, and keeps the numbers public so you can check them.
 
-FrameDiet does not claim a fixed percentage reduction in total model usage. The output size depends on the input, the model tokenizer, and the visual model used to inspect images. Run `framediet bench` to measure the included synthetic examples on your machine.
+No required dependencies. `ffmpeg` and `ffprobe` on `PATH` for the video commands.
 
-The working direction is one repository with a small shared core and opt-in domain tools. Video is implemented first; anatomy/SVG is a later domain proposal, not a shipped feature. See the [product direction and rollout](docs/ROADMAP.md).
+## What it measured
+
+Every row is one real run on one project; token counts use `cl100k_base`, which is a proxy and not Claude's tokenizer. Limits are written next to each result.
+
+| Question | Without FrameDiet | With FrameDiet | Notes |
+|---|---:|---:|---|
+| Remotion render log, 90 frames, default verbosity | 1,529 tokens | 164 | `--log=error` gives 28 but drops composition, codec and output path. [Details](bench/logs-three-columns.md) |
+| Find defects in a 30 s clip (4 injected: 2 black flashes, 1 s freeze, audio over 0 dBFS) | 27 full frames, about 42,000 vision tokens, found 1 of 4 | `fdiet qa` report, about 224 tokens, found 4 of 4 | Vision tokens are estimates from the documented formula, not measured. One clip: it shows the mechanism, not a detection rate. [Details](bench/frames-vs-qa.md) |
+| Whisper word timestamps, 50 words (synthetic) | 2,047 tokens | 463 | Synthetic fixture. |
+
+Not claimed: a fixed percentage saving, total-conversation savings, or that `qa` replaces looking at the video. A `PASS` means the configured numeric checks found nothing, not that the layout is right. Raw logs and scripts are in [`bench/`](bench), so the numbers reproduce.
 
 ## Install
 
-Install from a local checkout:
-
 ```bash
-python -m pip install -e .
+pip install git+https://github.com/AIsoidet/FrameDiet.git
 ```
 
-There is no public GitHub install URL yet. Add one after the repository is published.
+From a checkout: `python -m pip install -e .`. Optional `pip install -e ".[benchmark]"` adds `tiktoken` for the proxy token counts in `bench`.
 
-The Python package has no required third-party runtime dependencies. Video commands need `ffmpeg` and `ffprobe` on `PATH`; timestamp drawing for `sheet` requires an FFmpeg build with `drawtext` support. FrameDiet uses a common system font when available, or pass `--font-file` if the build has no default font configured. Optional benchmark token counts use `tiktoken`:
+`framediet` and the short alias `fdiet` are the same command. Windows, macOS and Linux are supported by the code; the live Claude Code check below was done on Windows only.
+
+## Quick start
 
 ```bash
-python -m pip install -e ".[benchmark]"
+fdiet qa render.mp4                       # black, freeze, crop, audio peak: a short verdict
+fdiet qa render.mp4 --frames-dir qa       # plus small previews at each detected problem
+fdiet sheet render.mp4 --grid 3x3         # one timestamped contact sheet instead of many frames
+fdiet exec -- npx remotion render src/index.ts Main out.mp4   # run, keep a short summary
+fdiet json captions.json                  # compact word-timed transcript
+fdiet init                                # optional: Claude Code hook for the above
 ```
 
 ## Commands
 
-`framediet` and its short alias `fdiet` expose the same commands.
+### Layer 1: check a render (QA and vision)
 
-### Summarize media command output
+**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others). Intentional pauses and held title cards can trigger freeze warnings; raise `--freeze-min-duration` for slow-paced videos. `cropdetect` reports removable borders, not a content bounding box.
 
-```bash
-fdiet exec -- ffmpeg -i input.mp4 -c:v libx264 output.mp4
-fdiet exec -- npx remotion render src/index.ts Main out.mp4
-fdiet exec -- npx hyperframes render
-```
+**`fdiet sheet <video> --grid 3x3`** builds a timestamped contact sheet. It reduces the number of images, but small details are harder to see in a grid, and in our test a 3x3 sheet did not show a 0.2 s black flash. Use it for overall structure, and `qa` for defects. Existing files are not overwritten without `--overwrite`. If your FFmpeg build has no default font, pass `--font-file`.
 
-FrameDiet runs the arguments directly without a shell, removes common progress lines, and preserves a bounded set of diagnostics. A non-zero exit code is returned to the caller. Successful output is summarized, so inspect the original command directly if you need its full verbose log.
+**`fdiet frames <video> 4.2 7.5 10.0`** writes bounded, timestamp-named JPEG previews and reports source and preview sizes. The quality option is FFmpeg's qscale, not a percentage.
 
-### Install the Claude Code hook
+On image cost: [Anthropic's vision docs](https://platform.claude.com/docs/en/build-with-claude/vision) count 28x28 patches after model-tier-specific resizing. FrameDiet does not estimate image tokens, because the receiving model and tier are not known to it.
 
-```bash
-framediet init
-```
+### Layer 2: compact context about media and scenes
 
-The hook rewrites only a single direct invocation of a recognized media executable. Chained commands, pipes, redirects, and other shell expressions pass through unchanged. The hook does not return a permission decision; Claude Code retains its configured approval behavior. In some auto-mode situations, rewriting tool input can still cause Claude Code to review the changed call.
+**`fdiet json <file>`** detects Whisper, WhisperX, Faster-Whisper or Remotion caption JSON and prints `word[start-end]` per word, in integer milliseconds (`--unit s` for seconds). Any other JSON goes to the TOON encoder instead (see below). Detection is by shape, not a lossless conversion; keep the source file when confidence scores or other metadata matter.
 
-Claude Code's hook documentation says permission rules are evaluated against the input the hook returns, and that no output with exit code 0 means no decision. It does not say in so many words that `updatedInput` is applied without a `permissionDecision`, so we checked it live: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) the rewritten `ffmpeg` call came back as the `[OK] FrameDiet: …` summary with no `frame=` progress lines. Not tested: auto mode, interactive approval prompts, other Claude Code versions or platforms.
+Words the aligner could not time (WhisperX leaves `start` and `end` off tokens such as `"2014."` or `"£13.60"`) are written `word[?]` rather than a made-up `[0-0]`, and the header gains `?=no timing in source`. A segment's `speaker` stays in its label: `[500-4200 SPEAKER_00]`.
 
-The hook currently targets Claude Code's `Bash` tool. The CLI commands can be used manually from other agents and terminals.
+**TOON output.** For other JSON, `fdiet json timeline.json` writes [TOON 4.4 (working draft)](https://github.com/toon-format/spec/blob/main/SPEC.md). The encoder is a small independent implementation, not a copy of the reference one, and has only its own tests so far. Uniform arrays of objects become tables; non-uniform arrays use list form, so optional fields are never dropped. `--precision N` rounds floats on purpose; without it values round-trip.
 
-### Compact JSON input
+**`fdiet digest <Scene.tsx>`** prints a bounded index of Remotion `Composition`, `Sequence`, section and media tags with line ranges. It is a heuristic index, not a JSX parser, and does not infer rendered timing.
 
-```bash
-fdiet json voiceover.json
-fdiet json captions.json --unit s
-```
+**`fdiet probe <path>`** summarizes stream metadata for one media file, or dependencies, likely source files and media assets for a project directory.
 
-`fdiet json` automatically recognizes Whisper/Faster-Whisper or caption JSON with non-empty word/segment records and timestamp fields. It prints a transcript view for those shapes; other JSON values go through the TOON encoder. This is shape detection, not a lossless conversion or an explicit format flag.
+**`fdiet html <file>`** prints HTML with long SVG paths, base64 data URIs and inline script and style bodies replaced by markers. It is a reading aid; the source file is not changed.
 
-The transcript notation uses integer milliseconds by default, for example `Build[0-350] fast[350-720]`. It rounds source timestamps to the nearest millisecond and omits fields such as confidence scores; keep the original JSON when those fields matter.
+### Layer 3: shorten command output
 
-Words the aligner could not time (WhisperX leaves `start`/`end` off numbers such as `"2014."` or `"£13.60"`) are written as `word[?]` instead of a made-up `[0-0]`, and the header then adds `?=no timing in source`. A segment's `speaker` is kept in its label, for example `[500-4200 SPEAKER_00]`.
+**`fdiet exec -- <command>`** runs a command directly (no shell), removes progress lines and ANSI codes, and keeps a bounded set of diagnostics. A failing command returns its exit code and the last diagnostic lines, with critical lines such as `FATAL` kept even after long noise. Successful runs are summarized, so run the command yourself when you need the full log.
 
-### TOON output for other JSON shapes
+**`fdiet init`** adds a Claude Code `PreToolUse` hook for the `Bash` tool. It rewrites only a single, direct call of `ffmpeg`, `ffprobe`, `yt-dlp`, `manim`, `whisper`, `faster-whisper`, or `npx`/`bunx`/`pnpm` with `remotion` or `hyperframes`, into `framediet exec -- ...`. Pipes, chains, redirects and other shell syntax pass through untouched. The hook returns no permission decision, so your configured approvals stay in force.
 
-```bash
-fdiet json timeline.json
-fdiet json timeline.json --precision 3
-```
+Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) a hooked `ffmpeg` call came back as the `[OK] FrameDiet: ...` summary without `frame=` progress lines. Claude Code's documentation says permission rules are evaluated against the input the hook returns. Not tested: auto mode, interactive approval prompts, other versions or platforms.
 
-The encoder targets the [TOON 4.4 working draft](https://github.com/toon-format/spec/blob/main/SPEC.md), whose specification repository is MIT licensed. FrameDiet's encoder is a small independent implementation; it does not copy the reference implementation. Uniform arrays of objects use tabular form; non-uniform arrays use list form, preserving their different shapes. `--precision` intentionally rounds floating-point values; without it, values use a round-trippable representation.
+### Layer 4: housekeeping
 
-### Create a VLM contact sheet
+**`fdiet slim <skills-dir>`** previews long fenced code blocks in skill Markdown files that could move to reference files; `--apply` writes them under `references_diet/` with backups of the changed files. The preview is the default. It is a narrow Markdown transformation, not a lazy-loading system.
 
-```bash
-fdiet sheet render.mp4 -o critic-grid.jpg --grid 3x3
-fdiet sheet render.mp4 -o wide-grid.jpg --grid 4x3 --width 320
-```
+**`fdiet bench`** prints sizes for bundled synthetic examples. The synthetic FFmpeg log is deliberately progress-heavy (99% reduction); that is not a general expectation for quiet logs. Real-run measurements are in [`bench/`](bench).
 
-Frames are sampled at regular intervals across the clip and labeled with frame number and time. Existing output files are left alone unless `--overwrite` is supplied. A contact sheet reduces the number of image attachments; actual vision-token savings are model-dependent, and small details may be harder to inspect in a grid.
-If the FFmpeg build lacks a default font configuration, FrameDiet uses a common system font path or accepts an explicit `--font-file` path.
+## How the numbers are made
 
-[Anthropic's current vision docs](https://platform.claude.com/docs/en/build-with-claude/vision) count 28×28 image patches after model-tier-specific resizing; the `/750` estimate in the earlier proposal is not a reliable general formula. FrameDiet does not estimate provider-specific image tokens because the receiving model and tier are not known.
-
-### Check a rendered video before opening frames
-
-```bash
-fdiet qa render.mp4
-fdiet qa render.mp4 --frames-dir qa-frames
-```
-
-The report checks black intervals, low-motion freezes, crop-detection observations, and audio peak plus clipped-sample count when FFmpeg exposes it. `--frames-dir` extracts small JPEG previews at the start times of detected black/freeze intervals, up to 36 previews. A `PASS` only means the configured numeric checks did not flag a signal; it does not prove that layout, typography, or safe areas are correct. FFmpeg's [`cropdetect`](https://ffmpeg.org/ffmpeg-filters.html#cropdetect) reports likely removable borders, not a content bounding box.
-
-### Extract specific frame previews
-
-```bash
-fdiet frames render.mp4 4.2 7.5 10.0 --out-dir review-frames
-```
-
-FrameDiet writes bounded, timestamp-named JPEG previews and reports source/preview dimensions. The JPEG quality option is FFmpeg's qscale, not a percentage.
-
-### Summarize scene source or a project
-
-```bash
-fdiet digest src/Scene.tsx
-fdiet probe .
-fdiet probe public/preview.mp4
-```
-
-`digest` reports a bounded heuristic index of Remotion `Composition`/`Sequence`, section, and media tags with source line ranges. It does not evaluate JSX or infer rendered timing. `probe` summarizes package dependencies, likely source files, and media assets for a project directory, or stream metadata for one media file.
-
-### Preview or apply skill-file extraction
-
-```bash
-# Preview long fenced blocks that would be extracted
-fdiet slim .claude/skills
-
-# Write references and a separate backup of each changed Markdown file
-fdiet slim .claude/skills --apply
-```
-
-The preview is the default. `--apply` moves fenced code blocks at or above the line threshold into content-hash-named files under `references_diet/`. Existing references are not overwritten, and the original Markdown is backed up before it is changed.
-
-### Reduce large HTML/SVG payloads for inspection
-
-```bash
-fdiet html landing-page.html > landing-page.compact.html
-```
-
-The source file is not modified. Long SVG paths, base64 data URIs, and inline script/style bodies are replaced with markers in the printed output; this is a reading aid, not a transformed production page.
-
-### Measure the bundled examples
-
-```bash
-framediet bench
-```
-
-The command prints character counts for deterministic synthetic transcript, timeline, and FFmpeg-log examples. The synthetic FFmpeg fixture is deliberately progress-heavy and reduced by 99.5%; this is not a general expectation for quiet logs. With the optional benchmark dependency installed, `bench` also prints `cl100k_base` counts as a tokenizer proxy, not Claude tokens or total conversation savings. The [local size inventory](bench/baseline-skills.md) covers anatomy, watch, and the kinetic-test skill; the [`cl100k_base` report](bench/baseline-tiktoken.txt) records those per-file counts, not before/after FrameDiet savings. Real-run measurements, each on one project and with `cl100k_base` as a proxy:
-
-- [Remotion log, three columns](bench/logs-three-columns.md): a 90-frame render is 1,529 tokens at default verbosity, 28 with `--log=error` and 164 through `fdiet exec`. The raw logs are in `bench/fixtures/`, and `bench/three_columns.py` reproduces the numbers. `--log=error` is cheaper but drops the composition, codec and output path; runs already using it have little to remove.
-- [Frames versus `fdiet qa`](bench/frames-vs-qa.md): a clip with four injected defects and a known ground truth. `qa` found all four; 1 fps frames found one by grid luck and a 3x3 sheet found none. Text of the report is about 224 tokens, against roughly 42,000 for 27 full frames (vision-token estimates from the documented formula, not measured). One clip, so this shows the mechanism and is not a detection-rate claim.
-- [Earlier notes](bench/real-render-log.md) and the [two-video QA smoke check](bench/local-smoke-2026-11.md). Neither is a representative benchmark.
+- Tokens: `cl100k_base` through `tiktoken` as a stand-in. Claude's tokenizer is different, so absolute counts differ; ratios are indicative.
+- Images: tokens from the documented `ceil(w/28) x ceil(h/28)` rule with the published resize limits (1568 px / 1568 tokens standard; 2576 px / 4784 tokens high-resolution tier). Estimates, not measurements.
+- Detection tests use a ground-truth clip with known injected defects and a control clip. The control showed false positives (freeze warnings on pauses that were intentional), which is why thresholds are exposed.
+- Everything is one project's output. Treat the figures as evidence that the mechanism works, and run `bench/*.py` on your own material before relying on them.
 
 ## Scope and limitations
 
-- FrameDiet summarizes command output; it does not replace media-processing tools.
-- `sheet` requires external FFmpeg programs and a `drawtext`-enabled build.
-- `qa` checks objective FFmpeg signals. A clean report cannot replace visual review of design quality or exact layout.
-- `digest` is a source index, not a TypeScript/JSX parser.
-- The transcript view preserves text and timestamps to millisecond precision, while omitting optional source metadata.
-- TOON output is for compact agent context. Keep source JSON for archival or application interchange.
-- Skill extraction is opt-in and creates backups; review the preview before applying it to third-party skills.
+- FrameDiet summarizes and checks. It does not render, edit or replace FFmpeg, Remotion or HyperFrames.
+- `sheet` needs an FFmpeg build with `drawtext`.
+- `qa` checks objective signals only. It cannot judge design, typography or safe areas.
+- `digest` is a source index, not a TypeScript or JSX parser.
+- Command-output filtering saves little when you already run tools quietly (`--log=error`).
+- Word-level `speaker` fields (WhisperX) are not read; only segment-level speaker is kept.
 
 ## Related tools
 
-This is an adjacent-tool survey, not an exhaustive market study. Existing projects already cover parts of the workflow: [Token-Saver](https://github.com/ppgranger/token-saver) and [RTK](https://github.com/rtk-ai/rtk) handle common CLI output; [claudeclip](https://github.com/gulkoa/claudeclip) includes video inspection and contact sheets; [claude-video](https://github.com/bradautomates/claude-video) works with timestamped frames and transcripts; and [ffmpeg-video-analysis](https://github.com/JosiahSiegel/claude-plugin-marketplace/tree/main/plugins/ffmpeg-core/skills/ffmpeg-video-analysis) documents FFmpeg checks and automation patterns. FrameDiet packages local deterministic checks with a compact report and optional frame previews; it makes no first-mover or universal token-savings claim.
+This is a survey of tools we found and read, not a market study; stars as read on 2026-11-08.
+
+- General CLI output compressors: [RTK](https://github.com/rtk-ai/rtk), [token-saver](https://github.com/ppgranger/token-saver). They do not target media commands, to our reading.
+- [video-use](https://github.com/browser-use/video-use) (MIT, about 30.7k stars): an agent edits video by reading a phrase-level transcript and rarely looking at frames; its ASR is a cloud service. Different job (editing), same instinct (give the agent text, not frames).
+- [claude-video](https://github.com/bradautomates/claude-video) (MIT): understanding someone else's video with timestamped frames and a transcript.
+- [claudeclip](https://github.com/gulkoa/claudeclip): FFmpeg MCP with contact sheets.
+- [auto-editor](https://github.com/WyattBlue/auto-editor) (Unlicense): automatic cutting of silence and dead time.
+- [OpenScreen](https://github.com/getopenscreen/openscreen) (MIT): screen recording and editing with an agent skill.
+
+None of these publish token measurements that we could find; that is why this repository keeps its raw logs.
+
+## Origin
+
+FrameDiet comes from the video workflow of the [ai_soidet](https://t.me/ai_soidet) channel, where Claude renders 9:16 reels with Remotion and the context bill grew with every frame and log. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for where it goes next (anatomy/SVG is a proposal, not a shipped feature).
+
+Issues with a failing log or a clip your `qa` got wrong are the most useful contribution.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

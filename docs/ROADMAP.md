@@ -22,7 +22,7 @@ The `slim` command is a narrow Markdown transformation: it previews long fenced-
 4. Move shared capabilities into a core package only after both domains use them.
 5. Revisit the `FrameDiet` name if anatomy/SVG becomes a first-class part of the product. Keep the current name while the shipped product is video-first.
 
-There is no test suite yet. Before external publication, add focused tests for transcript detection/formatting, log filtering, TOON shape preservation, hook command matching, and QA log parsing.
+Tests (54, `pytest tests`) cover transcript formatting, log filtering, TOON shapes, hook command matching and QA log parsing. Still missing: tests that run the FFmpeg-backed commands end to end, and a comparison of the TOON encoder against the reference implementation.
 
 ## Local measurement notes
 
