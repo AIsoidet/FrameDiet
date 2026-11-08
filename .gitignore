@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+.claude/settings.local.json
+framediet_sheet.jpg
+framediet_frames/
+qa-frames/
+bench/generated/

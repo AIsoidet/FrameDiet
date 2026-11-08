@@ -1,0 +1,32 @@
+Token counts use tiktoken cl100k_base. This is not Claude's tokenizer.
+Combined totals are sums of independently encoded files.
+
+## anatomy
+SKILL.md: 8372
+README.md: 7004
+  references/kit.md: 19151
+  references/webgl.md: 16513
+  references/craft.md: 13463
+  references/3d.md: 12543
+  references/verify.md: 11654
+  references/motion.md: 5674
+  references/print.md: 1863
+  references/walkthrough.md: 1482
+  references/publish.md: 1010
+  references/react.md: 894
+references total: 84247
+sum per file: SKILL only = 8372; SKILL + all refs = 92619
+
+## watch
+SKILL.md: 3918
+
+## kinetic-test/skill
+SKILL.md: 4141
+  references/blocks.md: 3062
+  references/sound.md: 1569
+  references/method.md: 1094
+  references/render.md: 1051
+  references/craft.md: 915
+  references/scenario-mcp.md: 843
+references total: 8534
+sum per file: SKILL only = 4141; SKILL + all refs = 12675
