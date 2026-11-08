@@ -1,0 +1,96 @@
+{
+  "corpus": "FrameDiet 0.3 approved video corpus",
+  "total_bytes": 70117445.0,
+  "files": [
+    {
+      "File": "actionow-ai-vvv-starter.mp4",
+      "Bytes": 4766008,
+      "Repo": "actionow-ai/vvv",
+      "Type": "motion graphics / starter",
+      "Url": "https://raw.githubusercontent.com/actionow-ai/vvv/main/docs/assets/starter.mp4",
+      "Category": "motion graphics",
+      "Sha256": "bc963430a491d6fdd5381367833556331066437cef1debcf04d67f41c5d56df7"
+    },
+    {
+      "File": "actionow-ai-vvv-album-vertical.mp4",
+      "Bytes": 3159445,
+      "Repo": "actionow-ai/vvv",
+      "Type": "vertical / album",
+      "Url": "https://raw.githubusercontent.com/actionow-ai/vvv/main/docs/assets/album-vertical.mp4",
+      "Category": "vertical motion graphics",
+      "Sha256": "26b1fcbba3d6e9be902f1a86a0ecf27c776fa28ac9bab26c1510e2a1f63b81a9"
+    },
+    {
+      "File": "actionow-ai-vvv-cinema.mp4",
+      "Bytes": 5188860,
+      "Repo": "actionow-ai/vvv",
+      "Type": "motion graphics / cinematic",
+      "Url": "https://raw.githubusercontent.com/actionow-ai/vvv/main/docs/assets/cinema.mp4",
+      "Category": "motion graphics",
+      "Sha256": "80f64bbaeb03942bc2e360c3470e4d32e20fce342f9853a0b476e0a9d69d4d2f"
+    },
+    {
+      "File": "actionow-ai-vvv-comedy.mp4",
+      "Bytes": 15312037,
+      "Repo": "actionow-ai/vvv",
+      "Type": "motion graphics / comedy",
+      "Url": "https://raw.githubusercontent.com/actionow-ai/vvv/main/docs/assets/comedy.mp4",
+      "Category": "motion graphics",
+      "Sha256": "12339ee5d8bde1a3d5949ea87337941274c74290189b0cd688f9e662ac857b4e"
+    },
+    {
+      "File": "actionow-ai-vvv-doodle.mp4",
+      "Bytes": 8378887,
+      "Repo": "actionow-ai/vvv",
+      "Type": "illustrated / doodle",
+      "Url": "https://raw.githubusercontent.com/actionow-ai/vvv/main/docs/assets/doodle.mp4",
+      "Category": "illustrated animation",
+      "Sha256": "5f192b20aeae5ba234f5473055fb07b9ff457e44bc7fec4a2a8a8cd9b1c66345"
+    },
+    {
+      "File": "Changroro-code-video-hero-45s.mp4",
+      "Bytes": 3959530,
+      "Repo": "Changroro/code-video",
+      "Type": "explainer / hero demo",
+      "Url": "https://raw.githubusercontent.com/Changroro/code-video/main/docs/hero-45s.mp4",
+      "Category": "explainer/demo",
+      "Sha256": "6aa73dd3ddb2d287bbb5186dec1fc2705866e2fce50a07c60fd33bc5dc3f1b43"
+    },
+    {
+      "File": "lemomo-ai-lemo-opuscar-archive-lighttable.mp4",
+      "Bytes": 7610029,
+      "Repo": "lemomo-ai/lemo-opuscar",
+      "Type": "motion graphics / archive",
+      "Url": "https://github.com/lemomo-ai/lemo-opuscar/releases/download/web/archive-lighttable.mp4",
+      "Category": "motion graphics",
+      "Sha256": "b12e34579a409913f04990cca88615f244a4e95d9f63b368c063019497a795f4"
+    },
+    {
+      "File": "mileson-chaojifeng-opuscar-swiss-motion.mp4",
+      "Bytes": 1803113,
+      "Repo": "mileson/chaojifeng-video-design",
+      "Type": "motion graphics / sample",
+      "Url": "https://raw.githubusercontent.com/mileson/chaojifeng-video-design/main/styles/opuscar-swiss-motion/sample.mp4",
+      "Category": "motion graphics",
+      "Sha256": "09639ce0cc856adceb177bacbe6d380d619fb25576b612402f0fcf1aa9a303ca"
+    },
+    {
+      "File": "Aaryan-Kapoor-product-walkthrough-demo.mp4",
+      "Bytes": 100869,
+      "Repo": "Aaryan-Kapoor/video-production-skill",
+      "Type": "product walkthrough",
+      "Url": "https://raw.githubusercontent.com/Aaryan-Kapoor/video-production-skill/main/examples/videos/product-walkthrough-demo.mp4",
+      "Category": "product walkthrough",
+      "Sha256": "913635d44d1ae4124eb839b8b14e01f3708339b7b64bab6770a814962492eeaf"
+    },
+    {
+      "File": "gnipbao-handdrawn-styles-page-flip.mp4",
+      "Bytes": 19838667,
+      "Repo": "gnipbao/story-to-handdrawn-video",
+      "Type": "hand-drawn style showcase",
+      "Url": "https://raw.githubusercontent.com/gnipbao/story-to-handdrawn-video/main/examples/style-showcase/handdrawn-styles-75-page-flip-45s-bgm.mp4",
+      "Category": "hand-drawn animation",
+      "Sha256": "7df3924600a61bc09f5dff444c1cfaa4c21406de8a31ae07a55645a436e26e73"
+    }
+  ]
+}

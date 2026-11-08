@@ -1,0 +1,16 @@
+[QA WARN] | duration=44.000s | video=1280x720 | fps=24.000 | black=0 | freeze=11 | crop_observed=1280x720+0+0 | audio_peak=-0.7dBFS | clipped_samples=unavailable
+- freeze intervals: 4 (00:00:05.500 - 00:00:07.542 (2.04s), 00:00:10.000 - 00:00:11.542 (1.54s), 00:00:27.792 - 00:00:28.917 (1.12s), 00:00:30.000 - 00:00:31.792 (1.79s))
+- audio peak -0.7 dBFS exceeds warning threshold -1.0 dBFS
+- note: still at start/end, likely a title or end card: 00:00:41.000 - 00:00:44.000 (3.00s)
+- note: short stills under 0.75s, likely held beats: 00:00:04.500 - 00:00:05.167 (0.67s), 00:00:17.583 - 00:00:18.208 (0.62s), 00:00:20.958 - 00:00:21.542 (0.58s), 00:00:22.500 - 00:00:23.083 (0.58s)
+preview 4.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_01_0000004500ms.jpg
+preview 5.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_02_0000005500ms.jpg
+preview 7.042s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_03_0000007042ms.jpg
+preview 10.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_04_0000010000ms.jpg
+preview 17.583s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_05_0000017583ms.jpg
+preview 20.958s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_06_0000020958ms.jpg
+preview 22.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_07_0000022500ms.jpg
+preview 27.792s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_08_0000027792ms.jpg
+preview 30.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_09_0000030000ms.jpg
+preview 30.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_10_0000030500ms.jpg
+preview 41.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\mileson-chaojifeng-opuscar-swiss-motion\frame_11_0000041000ms.jpg

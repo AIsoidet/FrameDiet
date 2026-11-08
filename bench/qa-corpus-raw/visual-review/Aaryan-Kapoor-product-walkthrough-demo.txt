@@ -1,0 +1,12 @@
+[QA WARN] | duration=10.000s | video=1280x720 | fps=12.000 | black=0 | freeze=9 | crop_observed=1280x720+0+0 | audio=none
+- freeze intervals: 1 (00:00:02.083 - 00:00:10.000 (7.92s))
+- note: still at start/end, likely a title or end card: 00:00:00.333 - 00:00:01.750 (1.42s)
+preview 0.333s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_01_0000000333ms.jpg
+preview 2.083s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_02_0000002083ms.jpg
+preview 2.583s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_03_0000002583ms.jpg
+preview 3.250s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_04_0000003250ms.jpg
+preview 3.917s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_05_0000003917ms.jpg
+preview 4.583s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_06_0000004583ms.jpg
+preview 5.417s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_07_0000005417ms.jpg
+preview 7.083s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_08_0000007083ms.jpg
+preview 8.833s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Aaryan-Kapoor-product-walkthrough-demo\frame_09_0000008833ms.jpg

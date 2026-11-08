@@ -1,0 +1,14 @@
+[QA WARN] | duration=45.000s | video=1920x1080 | fps=30.000 | black=0 | freeze=9 | crop_observed=1920x1080+0+0 | audio_peak=1.6dBFS | clipped_samples=unavailable
+- freeze intervals: 5 (00:00:11.133 - 00:00:13.000 (1.87s), 00:00:13.300 - 00:00:14.800 (1.50s), 00:00:24.000 - 00:00:25.000 (1.00s), 00:00:31.967 - 00:00:33.000 (1.03s), 00:00:36.133 - 00:00:37.100 (0.97s))
+- audio peak 1.6 dBFS exceeds warning threshold -1.0 dBFS
+- note: still at start/end, likely a title or end card: 00:00:43.500 - 00:00:44.667 (1.17s)
+- note: short stills under 0.75s, likely held beats: 00:00:28.367 - 00:00:29.033 (0.67s), 00:00:30.500 - 00:00:31.000 (0.50s)
+preview 11.133s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_01_0000011133ms.jpg
+preview 13.300s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_02_0000013300ms.jpg
+preview 24.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_03_0000024000ms.jpg
+preview 28.367s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_04_0000028367ms.jpg
+preview 30.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_05_0000030500ms.jpg
+preview 31.967s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_06_0000031967ms.jpg
+preview 36.133s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_07_0000036133ms.jpg
+preview 43.500s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_08_0000043500ms.jpg
+preview 44.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\Changroro-code-video-hero-45s\frame_09_0000044000ms.jpg

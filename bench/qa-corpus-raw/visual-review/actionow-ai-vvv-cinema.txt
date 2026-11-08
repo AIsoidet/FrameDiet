@@ -1,0 +1,21 @@
+[QA WARN] | duration=115.840s | video=960x540 | fps=30.000 | black=12 | freeze=3 | crop_observed=960x540+0+0 | audio_peak=-1.0dBFS | clipped_samples=unavailable
+- black intervals: 10 (00:00:11.233 - 00:00:11.700 (0.47s), 00:00:19.533 - 00:00:19.733 (0.20s), 00:00:27.833 - 00:00:32.367 (4.53s), 00:00:36.100 - 00:00:42.033 (5.93s), 00:00:52.667 - 00:00:58.567 (5.90s), +5 more)
+- audio peak -1.0 dBFS exceeds warning threshold -1.0 dBFS
+- note: black at start/end, likely a fade: 00:00:00.000 - 00:00:00.533 (0.53s), 00:01:54.767 - 00:01:55.800 (1.03s)
+- note: still at start/end, likely a title or end card: 00:01:55.167 - 00:01:55.840 (0.67s)
+- note: short stills under 0.75s, likely held beats: 00:00:39.467 - 00:00:39.967 (0.50s), 00:00:40.433 - 00:00:40.933 (0.50s)
+preview 0.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_01_0000000000ms.jpg
+preview 11.233s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_02_0000011233ms.jpg
+preview 19.533s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_03_0000019533ms.jpg
+preview 27.833s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_04_0000027833ms.jpg
+preview 36.100s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_05_0000036100ms.jpg
+preview 39.467s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_06_0000039467ms.jpg
+preview 40.433s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_07_0000040433ms.jpg
+preview 52.667s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_08_0000052667ms.jpg
+preview 63.600s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_09_0000063600ms.jpg
+preview 75.067s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_10_0000075067ms.jpg
+preview 86.033s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_11_0000086033ms.jpg
+preview 91.667s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_12_0000091667ms.jpg
+preview 105.267s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_13_0000105267ms.jpg
+preview 114.767s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_14_0000114767ms.jpg
+preview 115.167s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-cinema\frame_15_0000115167ms.jpg

@@ -1,0 +1,8 @@
+[QA WARN] | duration=142.016s | video=960x540 | fps=30.000 | black=0 | freeze=3 | crop_observed=960x540+0+0 | audio_peak=0.3dBFS | clipped_samples=unavailable
+- freeze intervals: 1 (00:02:06.733 - 00:02:08.400 (1.67s))
+- audio peak 0.3 dBFS exceeds warning threshold -1.0 dBFS
+- note: still at start/end, likely a title or end card: 00:00:00.000 - 00:00:00.867 (0.87s)
+- note: short stills under 0.75s, likely held beats: 00:00:14.200 - 00:00:14.733 (0.53s)
+preview 0.000s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-doodle\frame_01_0000000000ms.jpg
+preview 14.200s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-doodle\frame_02_0000014200ms.jpg
+preview 126.733s: C:\Temp\fd-corpus\framediet-0.3-2026-11-08\qa-frames\actionow-ai-vvv-doodle\frame_03_0000126733ms.jpg

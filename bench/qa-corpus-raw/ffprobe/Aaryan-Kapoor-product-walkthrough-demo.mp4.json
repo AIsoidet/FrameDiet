@@ -1,0 +1,21 @@
+{
+    "programs": [
+
+    ],
+    "stream_groups": [
+
+    ],
+    "streams": [
+        {
+            "index": 0,
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "12/1",
+            "avg_frame_rate": "12/1"
+        }
+    ],
+    "format": {
+        "duration": "10.000000"
+    }
+}

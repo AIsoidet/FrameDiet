@@ -1,0 +1,33 @@
+FrameDiet 0.3 T1: reproducible commands
+======================================
+
+The inputs are the ten approved local MP4s listed in qa-corpus-raw/sources.json.
+They are kept outside the repository under:
+  C:\Temp\fd-corpus\framediet-0.3-2026-11-08
+
+The command templates below were run once per file (30 FrameDiet QA runs total).
+Generated JSON stdout is preserved in qa-corpus-raw/qa/ and ffprobe JSON in
+qa-corpus-raw/ffprobe/. Only source metadata and diagnostics are in the repo.
+The download size and SHA-256 values in sources.json were checked with:
+  Get-ChildItem <corpus> -Filter *.mp4 | Measure-Object -Property Length -Sum
+  Get-FileHash -LiteralPath <video> -Algorithm SHA256
+
+ffprobe:
+  ffprobe -v error -show_entries "format=duration:stream=index,codec_type,width,height,avg_frame_rate,r_frame_rate,sample_rate,channels" -of json <video>
+
+FrameDiet QA (run for each video at each threshold):
+  python -I -c "import sys; sys.path.insert(0, r'D:\dev\FrameDiet\src'); from framediet.cli import main; main()" qa <video> --freeze-warn-duration 0.5 --json
+  python -I -c "import sys; sys.path.insert(0, r'D:\dev\FrameDiet\src'); from framediet.cli import main; main()" qa <video> --freeze-warn-duration 0.75 --json
+  python -I -c "import sys; sys.path.insert(0, r'D:\dev\FrameDiet\src'); from framediet.cli import main; main()" qa <video> --freeze-warn-duration 1.0 --json
+
+Table generation (reads only sources.json and the saved JSON reports; it does
+not open any video):
+  python -I bench\qa_corpus.py bench\qa-corpus-raw --output bench\qa-corpus-table.md
+
+Visual review commands (default threshold 0.75 s; each command was run once;
+preview JPEGs and logs remain outside the repository):
+  python -I -c "import sys; sys.path.insert(0, r'D:\dev\FrameDiet\src'); from framediet.cli import main; main()" qa <video> --frames-dir <new-empty-preview-dir>
+
+Reviewed warning clips: actionow-ai/vvv cinema, comedy, doodle; Changroro/code-video
+hero; mileson/chaojifeng-video-design Swiss-motion sample; Aaryan-Kapoor/video-production-skill
+product walkthrough.
