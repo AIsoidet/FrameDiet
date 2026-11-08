@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 import shutil
 import subprocess
@@ -38,6 +39,7 @@ def create_contact_sheet(
     thumb_width: int = 384,
     overwrite: bool = False,
     font_file: str | Path | None = None,
+    timeout: float = 60.0,
 ) -> str:
     """Render one timestamped grid of uniformly sampled video frames.
 
@@ -50,6 +52,8 @@ def create_contact_sheet(
         raise FileNotFoundError(f"Video file not found: {source}")
     if cols < 1 or rows < 1 or cols * rows > 36 or thumb_width < 64 or thumb_width > 1024:
         raise ValueError("Use 1-36 tiles total and a thumbnail width from 64 to 1024 pixels")
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("timeout must be a positive finite number of seconds")
     if cols * thumb_width > 4096:
         raise ValueError("Total contact-sheet width must not exceed 4096 pixels")
     if rows * thumb_width > 2048:
@@ -66,16 +70,20 @@ def create_contact_sheet(
     if not ffmpeg or not ffprobe:
         raise FileNotFoundError("FrameDiet sheet needs ffmpeg and ffprobe on PATH")
 
-    probe = subprocess.run(
-        [
-            ffprobe, "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1", str(source),
-        ],
-        capture_output=True,
-        text=True,
-        errors="replace",
-        check=False,
-    )
+    try:
+        probe = subprocess.run(
+            [
+                ffprobe, "-v", "error", "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1", str(source),
+            ],
+            capture_output=True,
+            text=True,
+            errors="replace",
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"ffprobe timed out after {timeout:g}s while reading {source}") from exc
     if probe.returncode:
         raise RuntimeError(f"ffprobe failed: {probe.stderr.strip() or probe.stdout.strip()}")
     try:
@@ -102,7 +110,12 @@ def create_contact_sheet(
         "-i", str(source), "-vf", filter_chain,
         "-frames:v", "1", "-q:v", "4", str(destination),
     ]
-    result = subprocess.run(command, capture_output=True, text=True, errors="replace", check=False)
+    try:
+        result = subprocess.run(
+            command, capture_output=True, text=True, errors="replace", check=False, timeout=timeout
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"ffmpeg timed out after {timeout:g}s while creating {destination}") from exc
     if result.returncode:
         raise RuntimeError(f"ffmpeg failed: {result.stderr.strip() or result.stdout.strip()}")
     if not destination.is_file():

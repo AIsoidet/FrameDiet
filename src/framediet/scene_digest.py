@@ -267,6 +267,8 @@ def _scan_tags(source: str, view: str, *, html_mode: bool = False) -> tuple[list
 def _is_relevant(tag: _Tag) -> bool:
     key = tag.name.lower()
     attrs = {attr.lower() for attr in tag.attrs}
+    if key == "div" and not attrs:
+        return False
     return (
         key in {"composition", "sequence"}
         or key in _SECTION_TAGS

@@ -298,6 +298,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sheet_parser.add_argument("--width", type=int, default=384, help="Width of each thumbnail")
     sheet_parser.add_argument("--font-file", help="Font file for drawtext if FFmpeg has no default font")
     sheet_parser.add_argument("--overwrite", action="store_true", help="Replace an existing output image")
+    sheet_parser.add_argument("--timeout", type=float, default=60, help="Maximum seconds for each FFmpeg tool call")
 
     qa_parser = commands.add_parser("qa", help="Check a rendered video for common objective issues")
     qa_parser.add_argument("video", help="Input video path")
@@ -390,6 +391,7 @@ def main() -> None:
             print(create_contact_sheet(
                 args.video, args.out, cols=cols, rows=rows,
                 thumb_width=args.width, overwrite=args.overwrite, font_file=args.font_file,
+                timeout=args.timeout,
             ))
         elif args.cmd == "qa":
             report = run_video_qa(

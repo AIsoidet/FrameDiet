@@ -95,7 +95,7 @@ def slim_skill_directory(
     """
     root = Path(target_dir)
     if not root.is_dir():
-        return f"Directory not found: {root}"
+        raise FileNotFoundError(f"Directory not found: {root}")
     if line_threshold < 1:
         raise ValueError("line_threshold must be positive")
 
@@ -126,7 +126,9 @@ def slim_skill_directory(
         for filename, block, _ in extracted:
             reference_path = ref_dir / filename
             if reference_path.exists():
-                if reference_path.read_text(encoding="utf-8") != block:
+                with reference_path.open("r", encoding="utf-8", newline="") as reference:
+                    existing = reference.read()
+                if existing != block:
                     raise FileExistsError(f"Refusing to overwrite existing reference: {reference_path}")
             else:
                 _atomic_write(reference_path, block)
