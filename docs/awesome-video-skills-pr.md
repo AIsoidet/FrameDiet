@@ -1,15 +1,15 @@
-# Local listing draft
+# Listing draft for awesome-claude-video-skills
 
-This is a draft for a future contribution. No pull request has been opened. Before using it, publish the repository, insert its actual URL, and verify the current table structure in the upstream [Frameworks & toolkits](https://github.com/zhuyansen/awesome-claude-video-skills#-frameworks--toolkits) section.
+A draft, not submitted. Open the PR only after the 0.1.0 release steps in `docs/ROADMAP.md` (marketplace install checked, tag, PyPI). The upstream README was restructured since this draft was first written: it now says it lists 454 repos graded by Agent Skills Hub and has a "Which one to install" section. Re-read the current table layout before editing, and follow its contribution rules.
 
-Suggested title: `Add FrameDiet to Frameworks & Toolkits`
+Suggested title: `Add FrameDiet (token-saving QA and context tools for video agents)`
 
 ```markdown
-| FrameDiet (repository URL to be added) | — | Media-aware context utilities for video workflows: deterministic FFmpeg checks, timestamped contact sheets and frame previews, compact transcript views, TOON serialization, scene/project digests, and render-log summaries | — |
+| [FrameDiet](https://github.com/AIsoidet/FrameDiet) | MIT | Claude Code plugin + CLI that gives video agents answers instead of raw material: deterministic FFmpeg QA verdicts instead of frame sampling, short Remotion/HyperFrames/FFmpeg render logs, compact Whisper/WhisperX transcripts. Raw benchmark logs in the repo. |
 ```
 
 Suggested summary:
 
-> Adds FrameDiet, a small CLI for media-aware context preparation in code-driven video workflows. It provides deterministic FFmpeg checks, timestamped contact sheets and frame previews, compact transcript views, TOON serialization, source/project digests, render-log summaries, and an opt-in skill-file extractor. The project documents its scope and measures included fixtures locally without claiming model-independent savings.
+> Adds FrameDiet, a small MIT CLI and Claude Code plugin for agents that make video with code. `framediet qa` checks a render for black frames, freezes and audio peaks in one text verdict (it marks likely title cards and held beats as notes); the plugin hook shortens progress-heavy render logs (Remotion 1,529 → 175 tokens, HyperFrames 7,191 → 362 on our runs); `framediet json` compacts word-level transcripts. In a small end-to-end test (n=2 per arm, one task) a Claude Code session cost $0.26 with FrameDiet and $0.58 without, with the same defects found. All numbers come with raw logs and scripts in `bench/`; no fixed percentage saving is claimed.
 
-Do not make a first-mover or universal token-savings claim. Fill in the repository URL before submission.
+Do not make a first-mover or universal token-savings claim, and keep the n=2 caveat if the session numbers are quoted.

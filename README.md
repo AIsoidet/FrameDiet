@@ -12,7 +12,7 @@ No required dependencies. `ffmpeg` and `ffprobe` on `PATH` for the video command
 
 ## What it measured
 
-Every row is one real run on one project; token counts use `cl100k_base`, which is a proxy and not Claude's tokenizer. Limits are written next to each result.
+Every row is a small real run (one machine, a few clips, n=1 or 2), not a survey. The session table uses Claude Code's own usage report; the single-step tables use `cl100k_base`, a proxy and not Claude's tokenizer. Limits are written next to each result.
 
 **One whole Claude Code session**, real usage from `claude -p --output-format json` (Opus 5.5, Claude Code 2.1.319): re-encode a 20 s clip with 4 known defects, then find them. Two runs each, same prompt, one project with FrameDiet's skill text and one without.
 
@@ -54,7 +54,7 @@ pip install git+https://github.com/AIsoidet/FrameDiet.git
 
 From a checkout: `python -m pip install -e .`. Optional `pip install -e ".[benchmark]"` adds `tiktoken` for the proxy token counts in `bench`.
 
-`framediet` and the short alias `fdiet` are the same command.
+`framediet` and the short alias `fdiet` are the same command. Windows, macOS and Linux are supported by the code; CI runs the tests on Linux and Windows, and the live Claude Code checks were done on Windows only. A PyPI package is prepared but not published yet ([docs/RELEASE.md](docs/RELEASE.md)).
 
 ### For skill authors
 
@@ -64,7 +64,7 @@ The hook catches direct `ffmpeg`/`remotion`/`hyperframes` calls only. If your sk
 framediet qa out.mp4 --strict          # one-line verdict; exit 1 on WARN
 ```
 
-and tell the agent in your SKILL.md to read that verdict before sampling frames, and to use `framediet frames <video> <times>` only at the reported timestamps. Windows, macOS and Linux are supported by the code; the live Claude Code check below was done on Windows only.
+and tell the agent in your SKILL.md to read that verdict before sampling frames, and to use `framediet frames <video> <times>` only at the reported timestamps.
 
 ## Quick start
 
@@ -74,7 +74,7 @@ fdiet qa render.mp4 --frames-dir qa       # plus small previews at each detected
 fdiet sheet render.mp4 --grid 3x3         # one timestamped contact sheet instead of many frames
 fdiet exec -- npx remotion render src/index.ts Main out.mp4   # run, keep a short summary
 fdiet json captions.json                  # compact word-timed transcript
-fdiet init                                # optional: Claude Code hook for the above
+fdiet init                                # optional: Claude Code hook without the plugin
 ```
 
 ### What the agent actually sees

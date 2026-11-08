@@ -1,6 +1,6 @@
 ---
 name: framediet
-description: Use FrameDiet to summarize video render output, compact Whisper or caption JSON for inspection, create timestamped contact sheets, and preview safe extraction of large skill examples.
+description: Use FrameDiet when checking a rendered or edited video for defects (black frames, freezes, audio peaks), reading Whisper/WhisperX or caption JSON, probing media files, or reading render logs and large HTML. Run `framediet qa` before sampling frames or writing your own FFmpeg/Python analysis.
 ---
 
 # FrameDiet workflow
@@ -12,10 +12,10 @@ Use FrameDiet when a video task produces verbose CLI logs, word-level transcript
 - Use `framediet exec -- <command>` for a single media-tool invocation whose output is noisy. It returns the wrapped command's exit status. Run the original command directly when the complete output is needed.
 - Use `framediet json <file>` to create a compact transcript view or TOON serialization. Preserve the source file; the compact output may omit optional metadata.
 - Use `framediet sheet <video> -o <image>` to sample a clip at regular intervals for visual review. Check the sheet at full size when small text or details matter.
-- Use `framediet qa <video>` before visual inspection. If it reports black/freeze intervals, add `--frames-dir <directory>` to extract small previews at those interval start times (up to 36).
+- Use `framediet qa <video>` first, before visual inspection and before writing your own detectors. It runs black, freeze, crop and audio-peak checks in one pass. `- note:` lines are likely intentional (title or end card, fade, held beat under 0.75 s); mention them but do not call them defects unless the brief says the shot should move. If it reports intervals, add `--frames-dir <directory>` to extract small previews at those interval start times (up to 36), and look only at those.
 - Use `framediet frames <video> <time...>` when specific moments need inspection; times are seconds.
 - Use `framediet digest <tsx/jsx/html>` for a bounded source index with approximate line ranges, or `framediet probe <path>` for local project/media metadata.
-- Use `framediet html <file>` to print an inspection copy with large embedded content replaced by markers. Redirect to a separate file if needed; the source is never changed.
+- Use `framediet html <file>` to print an inspection copy with large embedded content replaced by markers; add `--strip-classes` for Tailwind-heavy pages. Redirect to a separate file if needed; the source is never changed.
 - Use `framediet slim <skills-dir>` to preview code-block extraction. Only add `--apply` after reviewing the preview; the command writes references and a backup.
 
 ## Safety and accuracy
