@@ -29,7 +29,7 @@ The plain agent wrote its own FFmpeg detectors, Python analysis and spectrograms
 |---|---:|---:|---|
 | QA of a 9:16 reel with 3 real defects and an intentional 2 s title card | $0.61 | $0.43 | All runs found 3 of 3; both plain runs also listed the title card as a defect, neither FrameDiet run did |
 | Find a phrase's times and count words in a 60 s WhisperX JSON | $0.23 | $0.23 | All correct; the file is small, so no gain |
-| Render a HyperFrames project and check the output | $0.43 | $0.44 | All correct; no gain. Each FrameDiet run lost 2–3 turns on a wrong `frames` flag |
+| Render a HyperFrames project and check the output | $0.43 | $0.44 | All correct; no gain. Each FrameDiet run lost 2–3 turns on a wrong `frames` flag (`-o` is accepted now; not re-measured) |
 
 The hook fired in none of these runs. The agents piped renders through `tail`, which the hook deliberately leaves untouched. At measurement time the direct `npx --yes hyperframes@0.9.23 render` form was also unrecognized; it is now covered. A separate check with a plain `ffmpeg` encode showed the plugin hook does fire. So the saving is in QA-heavy work; on light tasks FrameDiet costs about the same. [Details](bench/e2e-tasks.md)
 
