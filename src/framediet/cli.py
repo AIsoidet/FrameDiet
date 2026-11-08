@@ -64,6 +64,50 @@ def _strip_exe(name: str) -> str:
     return name
 
 
+def _node_binary_name(package: str) -> str:
+    name = package.lower().replace("\\", "/")
+    if name.startswith("@") and "/" in name:
+        scope, name = name.split("/", 1)
+        if scope == "@remotion" and name.split("@", 1)[0] == "cli":
+            return "remotion"
+    else:
+        name = name.rsplit("/", 1)[-1]
+    return name.split("@", 1)[0]
+
+
+def _node_tool_invocation(tokens: list[str], runner: str) -> tuple[str, list[str]] | None:
+    index = 1
+    if runner == "pnpm":
+        if len(tokens) < 2 or tokens[1].lower() not in {"exec", "dlx"}:
+            return None
+        index = 2
+
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--":
+            index += 1
+            break
+        if token in {"-y", "--yes"}:
+            index += 1
+            continue
+        if token in {"-p", "--package"}:
+            if index + 1 >= len(tokens):
+                return None
+            index += 2
+            continue
+        if token.startswith("--package="):
+            index += 1
+            continue
+        if token.startswith("-"):
+            return None
+        break
+
+    if index >= len(tokens):
+        return None
+    tool = _node_binary_name(tokens[index])
+    return tool, tokens[index + 1:]
+
+
 _FFMPEG_NO_VALUE = {
     "-y", "-n", "-hide_banner", "-nostats", "-stats", "-nostdin", "-stdin", "-shortest",
     "-an", "-vn", "-sn", "-dn", "-re", "-copyts", "-start_at_zero", "-benchmark",
@@ -132,12 +176,14 @@ def is_safe_media_command(command: str) -> bool:
         return False
     if first in DIRECT_BINARIES:
         return _is_noisy_invocation(first, tokens[1:])
-    if first in {"npx", "bunx"} and len(tokens) >= 2:
-        tool = _basename(tokens[1])
-        return tool in NODE_MEDIA_TOOLS and _is_noisy_invocation(tool, tokens[2:])
-    if first == "pnpm" and len(tokens) >= 3 and tokens[1].lower() in {"exec", "dlx"}:
-        tool = _basename(tokens[2])
-        return tool in NODE_MEDIA_TOOLS and _is_noisy_invocation(tool, tokens[3:])
+    if first in {"hyperframes", "remotion"}:
+        return _is_noisy_invocation(first, tokens[1:])
+    if first in {"npx", "bunx", "pnpm"}:
+        invocation = _node_tool_invocation(tokens, first)
+        if invocation is None:
+            return False
+        tool, args = invocation
+        return tool in NODE_MEDIA_TOOLS and _is_noisy_invocation(tool, args)
     return False
 
 
