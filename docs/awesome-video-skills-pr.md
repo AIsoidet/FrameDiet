@@ -1,6 +1,6 @@
 # Listing draft for awesome-claude-video-skills
 
-A draft, not submitted. Open the PR only after the 0.1.0 release steps in `docs/ROADMAP.md` (marketplace install checked, tag, PyPI). The upstream README was restructured since this draft was first written: it now says it lists 454 repos graded by Agent Skills Hub and has a "Which one to install" section. Re-read the current table layout before editing, and follow its contribution rules.
+Not submitted. Checked 2026-11-08 against upstream (`zhuyansen/awesome-claude-video-skills`): the list is generated, not edited by hand. A decision model reads each repo's README and grades it. Rules from its README: (1) it makes or edits video or motion graphics, (2) an agent operates it, (3) it has a README, (4) at 50 stars or more it is listed on topic alone; under 50 it must clear a README quality bar (shows the result, one-command start, concrete outcome, complete docs) and have 5 stars unless it names Claude Opus 5.5. Entries are image cells in generated tables, so the table row below is only a description for an issue. Two risks: FrameDiet is QA and logging tooling for video agents, not a video maker (rule 1), and it has few stars. Before opening anything: get to 5 stars, name Claude Opus 5.5 in the README where the end-to-end runs are described (they used it), and put a result image and a one-command start at the top. Then open an issue (the list's own route for misfiled repos), not a PR. PyPI is postponed by the owner.
 
 Suggested title: `Add FrameDiet (token-saving QA and context tools for video agents)`
 

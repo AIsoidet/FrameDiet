@@ -27,10 +27,10 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 ## Next: 0.1.0 release
 
 1. **Install path:** Windows marketplace install checked 2026-11-08 (plugin enabled, 0.1.0). Still to check: one of macOS or Linux, and that the hook fires from the marketplace install. Document any Python-on-PATH issue found.
-2. **PyPI:** upload 0.1.0 by hand per `docs/RELEASE.md`, then switch to Trusted Publishing from a tagged GitHub Actions release.
+2. **PyPI (postponed by the owner):** upload 0.1.0 by hand per `docs/RELEASE.md`, then switch to Trusted Publishing from a tagged GitHub Actions release.
 3. **Tag and release:** `v0.1.0` tag, GitHub release notes that list what is measured and what is not.
 4. **Plugin icon:** a square PNG for the plugin directory. It follows the channel's brand book, which is frozen, so it is the owner's call.
-5. **Listing:** update `docs/awesome-video-skills-pr.md` and open the PR to `awesome-claude-video-skills` only after steps 1–3.
+5. **Listing:** the awesome-list is graded by a model from the README (see `docs/awesome-video-skills-pr.md`); prerequisites are stars and a README with a result image. Not a PR.
 
 ## 0.2: stronger evidence and fewer blind spots
 
