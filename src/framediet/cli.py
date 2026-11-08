@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import sys
@@ -199,7 +200,13 @@ def _write_hook_decision(payload: dict[str, Any]) -> None:
         return
 
     rewritten_input = dict(tool_input)
-    rewritten_input["command"] = f"framediet exec -- {command.strip()}"
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+    if plugin_root:
+        launcher = (Path(plugin_root) / "bin" / "framediet").resolve().as_posix()
+        executable = shlex.quote(launcher)
+    else:
+        executable = "framediet"
+    rewritten_input["command"] = f"{executable} exec -- {command.strip()}"
     # Do not set permissionDecision: Claude Code's normal approval policy remains active.
     response = {
         "hookSpecificOutput": {

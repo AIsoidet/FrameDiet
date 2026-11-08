@@ -88,6 +88,22 @@ def test_hook_emits_updated_input(capsys):
     assert "permissionDecision" not in out
 
 
+def test_hook_uses_plugin_launcher_when_available(tmp_path, monkeypatch, capsys):
+    plugin_root = tmp_path / "plugin root"
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(plugin_root))
+    cli._write_hook_decision({"tool_name": "Bash", "tool_input": {"command": "ffmpeg -i a b"}})
+    data = json.loads(capsys.readouterr().out)
+    launcher = (plugin_root / "bin" / "framediet").resolve().as_posix()
+    assert data["hookSpecificOutput"]["updatedInput"]["command"] == f"'{launcher}' exec -- ffmpeg -i a b"
+
+
+def test_hook_keeps_path_invocation_without_plugin_root(monkeypatch, capsys):
+    monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
+    cli._write_hook_decision({"tool_name": "Bash", "tool_input": {"command": "ffmpeg -i a b"}})
+    data = json.loads(capsys.readouterr().out)
+    assert data["hookSpecificOutput"]["updatedInput"]["command"] == "framediet exec -- ffmpeg -i a b"
+
+
 def test_hook_is_silent_for_other_tools_and_commands(capsys):
     cli._write_hook_decision({"tool_name": "Read", "tool_input": {"file_path": "x"}})
     cli._write_hook_decision({"tool_name": "Bash", "tool_input": {"command": "ls"}})
