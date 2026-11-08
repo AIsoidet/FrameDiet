@@ -12,10 +12,14 @@ MAX_CAPTURE_BYTES = 2_000_000
 MAX_SUMMARY_CHARS = 2_000_000
 MAX_SUMMARY_LINES = 50
 
+ANSI_ESCAPE = re.compile(
+    r"\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))"
+)
+
 PROGRESS_NOISE = re.compile(
     r"^(?:"
     r"frame=\s*\d+|size=\s*\d+|"
-    r"Rendering frame \d+|Rendered \d+/\d+|Stitching frames|"
+    r"Rendering frame \d+|Rendered \d+/\d+|Encoded\s+\d+/\d+|Stitching frames|"
     r"Bundling \d+%|Copying public dir|Compiling \d+%|"
     r"\[download\]\s*\d+(?:\.\d+)?%|"
     r"Fra:\d+\s+Mem:|Animation \d+:.*%|"
@@ -39,8 +43,14 @@ def _limit_capture(text: str, limit: int = MAX_SUMMARY_CHARS) -> str:
     return f"{text[:half]}\n[... FrameDiet omitted {len(text) - limit} characters ...]\n{text[-half:]}"
 
 
+def _strip_ansi(text: str) -> str:
+    """Remove common CSI color/control and OSC terminal sequences."""
+    return ANSI_ESCAPE.sub("", text)
+
+
 def compress_ffprobe_json(raw_output: str) -> str:
     """Summarize a narrow, recognized ffprobe shape; preserve other JSON fields."""
+    raw_output = _strip_ansi(raw_output)
     try:
         data = json.loads(raw_output)
     except (json.JSONDecodeError, TypeError):
@@ -109,6 +119,8 @@ def compress_output(
     stderr: str,
 ) -> str:
     """Summarize output while keeping diagnostics and a bounded amount of context."""
+    stdout = _strip_ansi(stdout)
+    stderr = _strip_ansi(stderr)
     executable = command[0].replace("\\", "/").rsplit("/", 1)[-1].lower() if command else ""
 
     if executable in {"ffprobe", "ffprobe.exe"} and returncode == 0:
@@ -127,10 +139,17 @@ def compress_output(
     clean = [line for line in lines if not PROGRESS_NOISE.match(line.strip())]
     if returncode:
         critical = [line for line in clean if any(word in line.lower() for word in CRITICAL_KEYWORDS)]
-        selected = list(dict.fromkeys(critical + clean[-MAX_SUMMARY_LINES:]))
+        # Reserve room for the last diagnostics first so a long tail cannot
+        # push them out of the bounded summary, then fill with the tail.
+        keep_critical = list(dict.fromkeys(critical))[-MAX_SUMMARY_LINES // 2:]
+        tail_room = MAX_SUMMARY_LINES - len(keep_critical)
+        tail = [line for line in clean[-tail_room:] if line not in keep_critical] if tail_room else []
+        wanted = set(keep_critical) | set(tail)
+        # Preserve original order of the chosen lines.
+        selected = [line for line in dict.fromkeys(clean) if line in wanted]
         if not selected:
             selected = clean[-MAX_SUMMARY_LINES:]
-        return f"[EXIT {returncode}] Command failed; diagnostic output follows:\n" + "\n".join(selected[-MAX_SUMMARY_LINES:])
+        return f"[EXIT {returncode}] Command failed; diagnostic output follows:\n" + "\n".join(selected)
 
     if not clean:
         return "[OK] FrameDiet: command completed successfully; progress output omitted."

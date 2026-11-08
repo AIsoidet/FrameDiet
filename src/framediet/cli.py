@@ -36,7 +36,9 @@ def is_safe_media_command(command: str) -> bool:
     if not command or SHELL_SYNTAX.search(command):
         return False
     try:
-        tokens = shlex.split(command, posix=True)
+        # Classification only: turn Windows separators into "/" so POSIX
+        # splitting does not eat the backslashes in C:\tools\ffmpeg.exe.
+        tokens = shlex.split(command.replace("\\", "/"), posix=True)
     except ValueError:
         return False
     if not tokens:

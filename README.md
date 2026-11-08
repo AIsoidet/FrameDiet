@@ -49,6 +49,8 @@ framediet init
 
 The hook rewrites only a single direct invocation of a recognized media executable. Chained commands, pipes, redirects, and other shell expressions pass through unchanged. The hook does not return a permission decision; Claude Code retains its configured approval behavior. In some auto-mode situations, rewriting tool input can still cause Claude Code to review the changed call.
 
+Claude Code's hook documentation says permission rules are evaluated against the input the hook returns, and that no output with exit code 0 means no decision. It does not say in so many words that `updatedInput` is applied without a `permissionDecision`, so this behaviour has been checked in unit tests only, not in a live session; test it on your Claude Code version.
+
 The hook currently targets Claude Code's `Bash` tool. The CLI commands can be used manually from other agents and terminals.
 
 ### Compact JSON input
@@ -61,6 +63,8 @@ fdiet json captions.json --unit s
 `fdiet json` automatically recognizes Whisper/Faster-Whisper or caption JSON with non-empty word/segment records and timestamp fields. It prints a transcript view for those shapes; other JSON values go through the TOON encoder. This is shape detection, not a lossless conversion or an explicit format flag.
 
 The transcript notation uses integer milliseconds by default, for example `Build[0-350] fast[350-720]`. It rounds source timestamps to the nearest millisecond and omits fields such as confidence scores; keep the original JSON when those fields matter.
+
+Words the aligner could not time (WhisperX leaves `start`/`end` off numbers such as `"2014."` or `"£13.60"`) are written as `word[?]` instead of a made-up `[0-0]`, and the header then adds `?=no timing in source`. A segment's `speaker` is kept in its label, for example `[500-4200 SPEAKER_00]`.
 
 ### TOON output for other JSON shapes
 
@@ -136,7 +140,11 @@ The source file is not modified. Long SVG paths, base64 data URIs, and inline sc
 framediet bench
 ```
 
-The command prints character counts for deterministic synthetic transcript, timeline, and FFmpeg-log examples. With the optional benchmark dependency installed, it also prints `cl100k_base` counts as a tokenizer proxy. That tokenizer is not Claude's tokenizer, and these fixtures measure tool-output size rather than total conversation savings. The [local size inventory](bench/baseline-skills.md) covers anatomy, watch, and the kinetic-test skill; the [`cl100k_base` report](bench/baseline-tiktoken.txt) is a tokenizer proxy, not a before/after FrameDiet result. `framediet bench` itself uses synthetic fixtures only. The separate two-video local smoke check is documented in [local-smoke-2026-11.md](bench/local-smoke-2026-11.md); it is not a representative quality or token-savings benchmark.
+The command prints character counts for deterministic synthetic transcript, timeline, and FFmpeg-log examples. The synthetic FFmpeg fixture is deliberately progress-heavy and reduced by 99.5%; this is not a general expectation for quiet logs. With the optional benchmark dependency installed, `bench` also prints `cl100k_base` counts as a tokenizer proxy, not Claude tokens or total conversation savings. The [local size inventory](bench/baseline-skills.md) covers anatomy, watch, and the kinetic-test skill; the [`cl100k_base` report](bench/baseline-tiktoken.txt) records those per-file counts, not before/after FrameDiet savings. Real-run measurements, each on one project and with `cl100k_base` as a proxy:
+
+- [Remotion log, three columns](bench/logs-three-columns.md): a 90-frame render is 1,529 tokens at default verbosity, 28 with `--log=error` and 164 through `fdiet exec`. The raw logs are in `bench/fixtures/`, and `bench/three_columns.py` reproduces the numbers. `--log=error` is cheaper but drops the composition, codec and output path; runs already using it have little to remove.
+- [Frames versus `fdiet qa`](bench/frames-vs-qa.md): a clip with four injected defects and a known ground truth. `qa` found all four; 1 fps frames found one by grid luck and a 3x3 sheet found none. Text of the report is about 224 tokens, against roughly 42,000 for 27 full frames (vision-token estimates from the documented formula, not measured). One clip, so this shows the mechanism and is not a detection-rate claim.
+- [Earlier notes](bench/real-render-log.md) and the [two-video QA smoke check](bench/local-smoke-2026-11.md). Neither is a representative benchmark.
 
 ## Scope and limitations
 

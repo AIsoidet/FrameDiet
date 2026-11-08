@@ -1,6 +1,6 @@
 # Real Remotion render log (2026-11-08)
 
-Raw stdout+stderr of two real Remotion commands on the local PixelFX reel project, captured at default log level (no `--log=error`), then passed once through `framediet.logs.compress_output`. Token counts use `cl100k_base` (a proxy, not Claude's tokenizer).
+Raw stdout+stderr of two real Remotion commands on the local PixelFX reel project, captured at default log level (no `--log=error`), then passed once through the pre-cleanup `framediet.logs.compress_output`. Token counts use `cl100k_base` (a proxy, not Claude's tokenizer).
 
 Commands (run from the AI_Channel `video/` project, output outside this repository):
 
@@ -16,8 +16,8 @@ Commands (run from the AI_Channel `video/` project, output outside this reposito
 
 - Raw output grows with frame count: Remotion prints one `Rendered N/total, time remaining` line per frame. This sample covers 90 frames; a full-length render would have proportionally more lines, but that longer run was not measured here.
 - Existing local workflows already run Remotion with `--log=error` (for example the FosterVox render log, 33 lines) or print two summary lines (`kinetic-test/film/render.log`, 122 bytes). On those, log compression saves little. The measured gain applies to default-verbosity runs.
-- The compact output still contains ANSI colour escape sequences and the shell `time` lines (`real/user/sys`) that came from the capture wrapper, not from Remotion.
-- `Encoded N/total` lines are kept; they are not matched by the progress-noise patterns in `logs.py`.
+- The measured compact output still contained ANSI colour escape sequences and one `Encoded N/total` line per progress step. The current `logs.py` strips ANSI sequences and filters `Encoded` progress lines.
+- The table above is the historical result of the pre-cleanup compressor. The raw logs of a repeat run are kept in `bench/fixtures/`, and [`logs-three-columns.md`](logs-three-columns.md) gives the current numbers (render 1,529 to 164 tokens, bundle 140 to 84). The shell `time` lines (`real/user/sys`) were included in all counts.
 
 ## Limits
 
