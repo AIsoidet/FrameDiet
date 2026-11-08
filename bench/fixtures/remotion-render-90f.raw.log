@@ -1,0 +1,109 @@
+Getting composition
+[90mComposition          PixelfxReel[39m
+[90mCodec                h264[39m
+[90mOutput               C:/Temp/claude/fc7bbd710f810593/69e52f47-2325-4e01-86da-345f5a958b9c/scratchpad/probe.mp4[39m
+[90mConcurrency          8x[39m
+Rendered 0/90
+Rendered 1/90, time remaining: 35s
+Rendered 2/90, time remaining: 19s
+Rendered 3/90, time remaining: 12s
+Rendered 4/90, time remaining: 9s
+Rendered 5/90, time remaining: 7s
+Rendered 6/90, time remaining: 6s
+Rendered 7/90, time remaining: 5s
+Rendered 8/90, time remaining: 4s
+Rendered 9/90, time remaining: 4s
+Rendered 10/90, time remaining: 4s
+Rendered 11/90, time remaining: 4s
+Rendered 12/90, time remaining: 3s
+Rendered 13/90, time remaining: 6s
+Rendered 14/90, time remaining: 5s
+Rendered 15/90, time remaining: 5s
+Rendered 16/90, time remaining: 4s
+Rendered 17/90, time remaining: 4s
+Rendered 18/90, time remaining: 4s
+Rendered 19/90, time remaining: 4s
+Rendered 20/90, time remaining: 4s
+Rendered 21/90, time remaining: 4s
+Rendered 22/90, time remaining: 3s
+Rendered 23/90, time remaining: 3s
+Rendered 24/90, time remaining: 3s
+Rendered 25/90, time remaining: 3s
+Rendered 26/90, time remaining: 3s
+Rendered 27/90, time remaining: 3s
+Rendered 28/90, time remaining: 3s
+Rendered 29/90, time remaining: 2s
+Rendered 30/90, time remaining: 2s
+Rendered 31/90, time remaining: 2s
+Rendered 32/90, time remaining: 2s
+Rendered 33/90, time remaining: 2s
+Rendered 34/90, time remaining: 2s
+Rendered 35/90, time remaining: 2s
+Rendered 36/90, time remaining: 2s
+Rendered 37/90, time remaining: 2s
+Rendered 38/90, time remaining: 2s
+Rendered 39/90, time remaining: 1s
+Rendered 40/90, time remaining: 1s
+Rendered 41/90, time remaining: 1s
+Rendered 42/90, time remaining: 1s
+Rendered 43/90, time remaining: 1s
+Rendered 44/90, time remaining: 1s
+Rendered 45/90, time remaining: 1s
+Rendered 46/90, time remaining: 1s
+Rendered 47/90, time remaining: 1s
+Rendered 48/90, time remaining: 1s
+Rendered 49/90, time remaining: 1s
+Rendered 50/90, time remaining: 1s
+Rendered 51/90, time remaining: 1s
+Rendered 52/90, time remaining: 1s
+Rendered 53/90, time remaining: 1s
+Rendered 54/90, time remaining: 1s
+Rendered 55/90, time remaining: 1s
+Rendered 56/90, time remaining: 1s
+Rendered 57/90, time remaining: 1s
+Rendered 58/90, time remaining: 1s
+Rendered 59/90, time remaining: 1s
+Rendered 60/90, time remaining: 1s
+Rendered 61/90, time remaining: 1s
+Rendered 62/90, time remaining: 1s
+Rendered 63/90, time remaining: 1s
+Rendered 64/90, time remaining: 0s
+Rendered 65/90, time remaining: 0s
+Rendered 66/90, time remaining: 0s
+Rendered 67/90, time remaining: 0s
+Rendered 68/90, time remaining: 0s
+Rendered 69/90, time remaining: 0s
+Rendered 69/90, time remaining: 0s
+Rendered 70/90, time remaining: 0s
+Rendered 71/90, time remaining: 0s
+Rendered 72/90, time remaining: 0s
+Rendered 73/90, time remaining: 0s
+Rendered 74/90, time remaining: 0s
+Rendered 75/90, time remaining: 0s
+Rendered 76/90, time remaining: 0s
+Rendered 77/90, time remaining: 0s
+Rendered 78/90, time remaining: 0s
+Rendered 78/90, time remaining: 0s
+Rendered 79/90, time remaining: 0s
+Rendered 80/90, time remaining: 0s
+Rendered 81/90, time remaining: 0s
+Rendered 82/90, time remaining: 0s
+Rendered 82/90, time remaining: 0s
+Rendered 83/90, time remaining: 0s
+Rendered 84/90, time remaining: 0s
+Rendered 85/90, time remaining: 0s
+Rendered 86/90, time remaining: 0s
+Rendered 87/90, time remaining: 0s
+Rendered 88/90, time remaining: 0s
+Rendered 89/90, time remaining: 0s
+Rendered 89/90, time remaining: 0s
+Encoded 16/90
+Encoded 39/90
+Encoded 67/90
+Encoded 72/90
+Encoded 90/90
+[34m+                    C:/Temp/claude/fc7bbd710f810593/69e52f47-2325-4e01-86da-345f5a958b9c/scratchpad/probe.mp4[39m [90m2.3 MB[39m
+
+real	0m8.813s
+user	0m0.105s
+sys	0m0.045s
