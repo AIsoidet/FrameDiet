@@ -66,3 +66,4 @@ def test_notes_do_not_change_status_and_are_printed():
     )
     assert report.status == "PASS"
     assert "- note: still at start/end" in report.to_text()
+    assert report.as_dict()["notes"] == ["still at start/end"]

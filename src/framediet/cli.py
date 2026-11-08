@@ -314,6 +314,7 @@ def _build_parser() -> argparse.ArgumentParser:
     qa_parser.add_argument("--ffprobe", help="Path to ffprobe executable")
     qa_parser.add_argument("--frames-dir", help="Also extract previews at detected black/freeze start times")
     qa_parser.add_argument("--strict", action="store_true", help="Exit with code 1 when the report is WARN (for CI and render scripts)")
+    qa_parser.add_argument("--json", action="store_true", help="Print the QA report as JSON")
 
     frames_parser = commands.add_parser("frames", help="Extract bounded JPEG previews at selected times")
     frames_parser.add_argument("video", help="Input video path")
@@ -405,7 +406,7 @@ def main() -> None:
                 ffmpeg_path=args.ffmpeg,
                 ffprobe_path=args.ffprobe,
             )
-            print(report.to_text())
+            print(json.dumps(report.as_dict(), ensure_ascii=False) if args.json else report.to_text())
             if args.frames_dir:
                 timestamps = sorted({
                     interval.start
@@ -416,9 +417,15 @@ def main() -> None:
                 timestamps = timestamps[:MAX_FRAME_COUNT]
                 previews = extract_frames(args.video, timestamps, args.frames_dir)
                 for preview in previews:
-                    print(f"preview {preview.timestamp_seconds:.3f}s: {preview.output_path}")
+                    print(
+                        f"preview {preview.timestamp_seconds:.3f}s: {preview.output_path}",
+                        file=sys.stderr if args.json else sys.stdout,
+                    )
                 if omitted:
-                    print(f"preview limit reached; skipped {omitted} additional interval start(s)")
+                    print(
+                        f"preview limit reached; skipped {omitted} additional interval start(s)",
+                        file=sys.stderr if args.json else sys.stdout,
+                    )
             if args.strict and report.status == "WARN":
                 raise SystemExit(1)
         elif args.cmd == "frames":

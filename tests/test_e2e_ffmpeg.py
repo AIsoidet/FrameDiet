@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -81,6 +82,21 @@ def test_qa_warns_on_mid_video_black_and_strict_exits_one(black_clip: Path):
     strict = _cli("qa", str(black_clip), "--strict")
     assert strict.returncode == 1
     assert "[QA WARN]" in strict.stdout
+
+
+def test_qa_json_preserves_report_and_strict_exit(black_clip: Path, tmp_path: Path):
+    frames_dir = tmp_path / "json-frames"
+    report = _cli("qa", str(black_clip), "--json", "--frames-dir", str(frames_dir))
+    assert report.returncode == 0, report.stderr
+    data = json.loads(report.stdout)
+    assert data["status"] == "WARN"
+    assert data["black_intervals"]
+    assert "notes" in data
+    assert "preview " in report.stderr
+
+    strict = _cli("qa", str(black_clip), "--json", "--strict")
+    assert strict.returncode == 1
+    assert json.loads(strict.stdout)["status"] == "WARN"
 
 
 def test_qa_reports_initial_title_card_as_note(tmp_path: Path):
