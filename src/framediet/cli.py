@@ -142,7 +142,7 @@ def _build_parser() -> argparse.ArgumentParser:
     init_parser = commands.add_parser("init", help="Add a permission-preserving Claude Code hook")
     init_parser.add_argument("--dir", default=".", help="Project directory")
 
-    commands.add_parser("hook", help=argparse.SUPPRESS)
+    commands.add_parser("hook", help="Internal entry point for the Claude Code PreToolUse hook (reads JSON on stdin)")
     commands.add_parser("bench", help="Measure deterministic sample fixtures locally")
 
     exec_parser = commands.add_parser("exec", help="Run one media command and summarize its output")

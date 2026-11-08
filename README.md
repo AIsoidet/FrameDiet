@@ -49,7 +49,7 @@ framediet init
 
 The hook rewrites only a single direct invocation of a recognized media executable. Chained commands, pipes, redirects, and other shell expressions pass through unchanged. The hook does not return a permission decision; Claude Code retains its configured approval behavior. In some auto-mode situations, rewriting tool input can still cause Claude Code to review the changed call.
 
-Claude Code's hook documentation says permission rules are evaluated against the input the hook returns, and that no output with exit code 0 means no decision. It does not say in so many words that `updatedInput` is applied without a `permissionDecision`, so this behaviour has been checked in unit tests only, not in a live session; test it on your Claude Code version.
+Claude Code's hook documentation says permission rules are evaluated against the input the hook returns, and that no output with exit code 0 means no decision. It does not say in so many words that `updatedInput` is applied without a `permissionDecision`, so we checked it live: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) the rewritten `ffmpeg` call came back as the `[OK] FrameDiet: …` summary with no `frame=` progress lines. Not tested: auto mode, interactive approval prompts, other Claude Code versions or platforms.
 
 The hook currently targets Claude Code's `Bash` tool. The CLI commands can be used manually from other agents and terminals.
 
