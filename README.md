@@ -10,6 +10,8 @@ When an AI agent renders and checks a video, most of its context goes to things 
 
 No required dependencies. `ffmpeg` and `ffprobe` on `PATH` for the video commands.
 
+**Where it helps, and where it does not:** it pays off on tasks that include a quality check (`qa` replaces frame sampling and hand-written detectors) and on long renders or heavy HTML. On light tasks, such as a transcript lookup or a single short render, the measured cost was about the same with and without it. A `WARN` is a cue to look at the flagged frames, not proof of a defect; layout, typography and pacing are still judged by the model.
+
 ## What it measured
 
 Every row is a small real run (one machine, a few clips, n=1 or 2), not a survey. The session table uses Claude Code's own usage report; the single-step tables use `cl100k_base`, a proxy and not Claude's tokenizer. Limits are written next to each result.
