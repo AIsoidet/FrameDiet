@@ -36,6 +36,12 @@ PROGRESS_NOISE = re.compile(
     r"\[INFO\] \[Render\] (?:Encoded frames while capturing|Calibration config|Pipeline started)"
     r")"
 )
+ENCODER_STATS = re.compile(
+    r"^\[(?:libx264|libx265|libvpx(?:-vp9)?|libaom-av1|libsvtav1|libopus|"
+    r"libmp3lame|libvorbis|libfdk_aac|aac|h264_(?:nvenc|amf|qsv)|"
+    r"hevc_(?:nvenc|amf|qsv)|av1_(?:nvenc|amf|qsv)|"
+    r"(?:pcm|ac3|eac3|flac|alac|opus|mp2|mp3)[a-z0-9_]*)\s*@[^]]+\]"
+)
 
 METADATA_MARKERS = (
     "stream #", "duration:", "output #", "rendered", "saved", "done", "created",
@@ -152,7 +158,11 @@ def compress_output(
         return f"FrameDiet: command exited with code {returncode} (no output)."
 
     lines = [line.rstrip() for line in combined.splitlines() if line.strip()]
-    clean = [line for line in lines if not PROGRESS_NOISE.match(line.strip())]
+    clean = [
+        line for line in lines
+        if not PROGRESS_NOISE.match(line.strip())
+        and (returncode != 0 or not ENCODER_STATS.match(line.strip()))
+    ]
     if returncode:
         critical = [line for line in clean if any(word in line.lower() for word in CRITICAL_KEYWORDS)]
         # Reserve room for the last diagnostics first so a long tail cannot

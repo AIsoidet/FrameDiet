@@ -59,6 +59,27 @@ def test_progress_only_omission_has_no_bypass_hint():
     assert "Full output" not in out
 
 
+def test_success_omits_encoder_statistics_without_full_output_hint():
+    raw = "\n".join([
+        "frame=  90 fps=30 q=-1.0 Lsize=     250kB time=00:00:03.00 bitrate=683.0kbits/s",
+        "[libx264 @ 0x1234] frame I:1 Avg QP:12.00 size: 11234",
+        "[libx264 @ 0x1234] kb/s:612.34",
+        "[aac @ 0x5678] Qavg: 132.456",
+        "video:220kB audio:28kB subtitle:0kB other streams:0kB",
+    ])
+    out = compress_output(["ffmpeg", "-i", "clip.mp4", "out.mp4"], 0, "", raw)
+    assert "Full output" not in out
+    assert "libx264" not in out
+    assert "Qavg" not in out
+    assert "(4 progress)" in out
+
+
+def test_failed_encode_keeps_encoder_statistics():
+    raw = "[libx264 @ 0x1234] frame I:1 Avg QP:12.00 size: 11234"
+    out = compress_output(["ffmpeg", "-i", "clip.mp4", "out.mp4"], 1, "", raw)
+    assert "libx264" in out
+
+
 def test_short_success_output_is_complete_without_note():
     out = compress_output(["ffmpeg"], 0, "", "Output #0, mp4, to 'b.mp4':")
     assert out.splitlines()[0] == "[OK] FrameDiet: command completed successfully."
