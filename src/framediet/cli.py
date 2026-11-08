@@ -311,7 +311,7 @@ def _build_parser() -> argparse.ArgumentParser:
     frames_parser = commands.add_parser("frames", help="Extract bounded JPEG previews at selected times")
     frames_parser.add_argument("video", help="Input video path")
     frames_parser.add_argument("timestamps", nargs="+", type=float, help="Presentation times in seconds")
-    frames_parser.add_argument("--out-dir", default="framediet_frames", help="Preview output directory")
+    frames_parser.add_argument("-o", "--out-dir", default="framediet_frames", help="Preview output directory")
     frames_parser.add_argument("--width", type=int, default=384, help="Maximum preview width in pixels")
     frames_parser.add_argument("--qscale", type=int, default=8, help="FFmpeg JPEG qscale (2 is highest quality; 31 is lowest)")
     frames_parser.add_argument("--overwrite", action="store_true", help="Replace existing preview files")
