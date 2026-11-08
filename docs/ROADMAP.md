@@ -10,7 +10,7 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 - **Claude Code plugin:** hook, skill and a `bin/framediet` launcher that runs from source. The repo is its own marketplace. Validated with `claude plugin validate`, live-checked with `--plugin-dir`.
 - **Tests:** 115 in `tests/`, run by CI on Linux and Windows with Python 3.10 and 3.12. None of them runs FFmpeg.
 - **Evidence in `bench/`:**
-  - an end-to-end session on real usage: $0.58 → $0.26 per run, 4 of 4 defects both ways, n=2;
+  - end-to-end sessions on real usage: defect QA $0.58 → $0.26 and $0.61 → $0.43 per run; transcript and render tasks about equal; n=2 per arm;
   - render logs: Remotion 1,529 → 175 tokens, HyperFrames 7,191 → 362;
   - frame-sampling rules of two critic-loop skills compared with `qa`;
   - three landing pages through `html`;
@@ -33,7 +33,10 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 
 ## 0.2: stronger evidence and fewer blind spots
 
-- **More end-to-end tasks.** The three-task run (QA with an intentional title card, transcript lookup, HyperFrames render and check) is in `bench/e2e-tasks.md`. Next: 5 runs per arm instead of 2, one non-Opus model, and a "nudged plain" arm whose prompt names the FFmpeg filters. That arm shows how much of the gain is just knowing which checks to run.
+- **Fixes found by the three-task run** (`bench/e2e-tasks.md`), first because they cost turns today:
+  - the hook does not match `npx --yes <tool>@<version> render`, the form HyperFrames' own `package.json` scripts use, nor a bare `hyperframes render`;
+  - agents tried `framediet frames … -o` in 4 of 6 runs; accept `-o` as an alias of `--out-dir`, and make the skill text show the exact flags.
+- **More end-to-end tasks.** Results of the three-task run: QA reel −29% with no false title-card claim; transcript lookup and HyperFrames render +0–3%, because the work is light and the hook did not fire. Next: 5 runs per arm instead of 2, one non-Opus model, and a "nudged plain" arm whose prompt names the FFmpeg filters. That arm shows how much of the gain is just knowing which checks to run.
 - **FFmpeg in CI.** Install FFmpeg in the workflow and run `qa`, `frames`, `sheet`, `probe` and `exec` end to end on generated clips with known defects. The two bugs found in the audit (`html` eating markup, hidden truncation) would have been caught this way.
 - **Hook coverage.** In the real session the agents wrote `ffmpeg … | tail -5`, and the hook correctly left that alone. Plan:
   - an opt-in list of extra commands to wrap (for example a skill's `scripts/render.sh`), in plugin `userConfig` or an environment variable;

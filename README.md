@@ -23,6 +23,16 @@ Every row is a small real run (one machine, a few clips, n=1 or 2), not a survey
 
 The plain agent wrote its own FFmpeg detectors, Python analysis and spectrograms; the FrameDiet agent ran `framediet qa`. The saving came from that, not from the log hook (the agents piped their encodes through `tail`, which the hook leaves alone). n=2, one task, one synthetic clip. [Details](bench/e2e-session.md)
 
+**Three more tasks**, same method, FrameDiet loaded only as the plugin (`--plugin-dir`), mean of 2 runs per arm:
+
+| Task | Without | With | Result |
+|---|---:|---:|---|
+| QA of a 9:16 reel with 3 real defects and an intentional 2 s title card | $0.61 | $0.43 | All runs found 3 of 3; both plain runs also listed the title card as a defect, neither FrameDiet run did |
+| Find a phrase's times and count words in a 60 s WhisperX JSON | $0.23 | $0.23 | All correct; the file is small, so no gain |
+| Render a HyperFrames project and check the output | $0.43 | $0.44 | All correct; no gain. Each FrameDiet run lost 2–3 turns on a wrong `frames` flag |
+
+The hook fired in none of these runs. The agents piped renders through `tail`, and wrote `npx --yes hyperframes@0.9.23 render`, a form the hook does not match yet. A separate check with a plain `ffmpeg` encode showed the plugin hook does fire. So the saving is in QA-heavy work; on light tasks FrameDiet costs about the same. [Details](bench/e2e-tasks.md)
+
 **Single steps**, `cl100k_base` proxy counts:
 
 | Question | Without FrameDiet | With FrameDiet | Notes |
