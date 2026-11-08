@@ -116,9 +116,9 @@ def _freeze_warning_count(report: dict[str, Any]) -> int:
 
 
 def _print_video_table(videos: list[dict[str, Any]], thresholds: tuple[str, ...]) -> None:
-    print("## По роликам")
+    print("## Per video")
     print()
-    print("| Файл | Тип | Длина | Видео / fps / звук | Статус 0,5 / 0,75 / 1,0 с | Notes 0,5 / 0,75 / 1,0 с | Warnings при 0,75 с (# + текст) | Notes при 0,75 с (# + текст) |")
+    print("| File | Type | Length | Video / fps / audio | Status 0.5 / 0.75 / 1.0 s | Notes 0.5 / 0.75 / 1.0 s | Warnings at 0.75 s (# + text) | Notes at 0.75 s (# + text) |")
     print("|---|---|---:|---|---|---|---|---|")
     for video in videos:
         reports = video["reports"]
@@ -129,10 +129,10 @@ def _print_video_table(videos: list[dict[str, Any]], thresholds: tuple[str, ...]
         note_items = default.get("notes", [])
         warnings = f"{len(warning_items)}: " + ("; ".join(warning_items) or "—")
         notes = f"{len(note_items)}: " + ("; ".join(note_items) or "—")
-        specs = f"{video['resolution']} / {video['fps']} / {video['audio']} ауд."
+        specs = f"{video['resolution']} / {video['fps']} / {video['audio']} audio"
         print(
             f"| {_clean_cell(video['file'])} | {_clean_cell(video['category'])} | "
-            f"{video['duration']:.2f} с | {specs} | {statuses} | {note_counts} | "
+            f"{video['duration']:.2f} s | {specs} | {statuses} | {note_counts} | "
             f"{_clean_cell(warnings)} | {_clean_cell(notes)} |"
         )
 
@@ -143,9 +143,9 @@ def _print_type_table(videos: list[dict[str, Any]], thresholds: tuple[str, ...])
         grouped[video["category"]].append(video)
 
     print()
-    print("## По типам")
+    print("## By type")
     print()
-    print("| Тип | n | WARN 0,5 / 0,75 / 1,0 с | Доля WARN при 0,75 с | Среднее notes при 0,75 с |")
+    print("| Type | n | WARN 0.5 / 0.75 / 1.0 s | WARN share at 0.75 s | Mean notes at 0.75 s |")
     print("|---|---:|---|---:|---:|")
     for category, group in sorted(grouped.items()):
         warn_counts = [sum(_warn(video["reports"][t]) for video in group) for t in thresholds]
@@ -158,11 +158,11 @@ def _print_type_table(videos: list[dict[str, Any]], thresholds: tuple[str, ...])
 def _print_threshold_changes(videos: list[dict[str, Any]], thresholds: tuple[str, ...]) -> None:
     default = DEFAULT_THRESHOLD
     print()
-    print("## Сдвиги относительно порога 0,75 с")
+    print("## Shifts relative to the 0.75 s threshold")
     print()
-    print("Отдельно считаются WARN-ролики и найденные freeze-интервалы: аудио/чёрные WARN могут сохранять статус ролика.")
+    print("Videos with WARN and freeze intervals are counted separately: audio or black WARNs can keep a video's status.")
     print()
-    print("| Порог | WARN-ролики | Freeze WARN-интервалы, всего | Ролики: новые / исчезнувшие WARN относительно 0,75 с | Freeze-интервалы: появились / исчезли относительно 0,75 с |")
+    print("| Threshold | Videos with WARN | Freeze WARN intervals, total | Videos: new / gone WARN vs 0.75 s | Freeze intervals: added / removed vs 0.75 s |")
     print("|---:|---:|---:|---:|---:|")
     for threshold in thresholds:
         warn_videos = sum(_warn(video["reports"][threshold]) for video in videos)
@@ -183,7 +183,7 @@ def _print_threshold_changes(videos: list[dict[str, Any]], thresholds: tuple[str
             )
             video_delta = f"{new} / {gone}"
             freeze_delta = f"{added_freezes} / {removed_freezes}"
-        print(f"| {threshold.replace('.', ',')} с | {warn_videos}/{len(videos)} | {freeze_total} | {video_delta} | {freeze_delta} |")
+        print(f"| {threshold} s | {warn_videos}/{len(videos)} | {freeze_total} | {video_delta} | {freeze_delta} |")
 
 
 def render(corpus: Path, thresholds: tuple[str, ...]) -> None:
