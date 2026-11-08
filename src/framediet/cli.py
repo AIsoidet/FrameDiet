@@ -174,6 +174,7 @@ def _build_parser() -> argparse.ArgumentParser:
     qa_parser.add_argument("--ffmpeg", help="Path to ffmpeg executable")
     qa_parser.add_argument("--ffprobe", help="Path to ffprobe executable")
     qa_parser.add_argument("--frames-dir", help="Also extract previews at detected black/freeze start times")
+    qa_parser.add_argument("--strict", action="store_true", help="Exit with code 1 when the report is WARN (for CI and render scripts)")
 
     frames_parser = commands.add_parser("frames", help="Extract bounded JPEG previews at selected times")
     frames_parser.add_argument("video", help="Input video path")
@@ -275,6 +276,8 @@ def main() -> None:
                     print(f"preview {preview.timestamp_seconds:.3f}s: {preview.output_path}")
                 if omitted:
                     print(f"preview limit reached; skipped {omitted} additional interval start(s)")
+            if args.strict and report.status == "WARN":
+                raise SystemExit(1)
         elif args.cmd == "frames":
             previews = extract_frames(
                 args.video,

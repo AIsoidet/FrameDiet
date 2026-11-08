@@ -43,11 +43,29 @@ fdiet json captions.json                  # compact word-timed transcript
 fdiet init                                # optional: Claude Code hook for the above
 ```
 
+### What the agent actually sees
+
+A 6 s clip with one 0.3 s black flash, checked with `fdiet qa`:
+
+```text
+[QA WARN] | duration=6.000s | video=360x640 | fps=30.000 | black=1 | freeze=0 | crop_observed=360x640+0+0 | audio_peak=-28.1dBFS | clipped_samples=unavailable
+- black intervals: 1 (from 00:00:02.000 - 00:00:02.333)
+```
+
+A WhisperX segment with one untimed token, through `fdiet json`:
+
+```text
+# FrameDiet transcript (unit=ms; word[start-end]); ?=no timing in source
+[500-4200 SPEAKER_00] In[500-700] 2014.[800-1300] it[1400-1500] cost[1600-2000] £13.60[?]
+```
+
+Both outputs were produced by the current version on a generated clip and a hand-written JSON.
+
 ## Commands
 
 ### Layer 1: check a render (QA and vision)
 
-**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others). Intentional pauses and held title cards can trigger freeze warnings; raise `--freeze-min-duration` for slow-paced videos. `cropdetect` reports removable borders, not a content bounding box.
+**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Without flags it always exits 0, even on `WARN`, so an agent can read the verdict. Add `--strict` and it exits 1 on `WARN`, so a render script or CI job can fail on its own (invalid input or a missing FFmpeg exits 2). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others). Intentional pauses and held title cards can trigger freeze warnings; raise `--freeze-min-duration` for slow-paced videos. `cropdetect` reports removable borders, not a content bounding box.
 
 **`fdiet sheet <video> --grid 3x3`** builds a timestamped contact sheet. It reduces the number of images, but small details are harder to see in a grid, and in our test a 3x3 sheet did not show a 0.2 s black flash. Use it for overall structure, and `qa` for defects. Existing files are not overwritten without `--overwrite`. If your FFmpeg build has no default font, pass `--font-file`.
 
@@ -79,7 +97,7 @@ Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, de
 
 ### Layer 4: housekeeping
 
-**`fdiet slim <skills-dir>`** previews long fenced code blocks in skill Markdown files that could move to reference files; `--apply` writes them under `references_diet/` with backups of the changed files. The preview is the default. It is a narrow Markdown transformation, not a lazy-loading system.
+**`fdiet slim <skills-dir>`** is a separate utility that ships here because video skills and prompts tend to carry long code blocks (Remotion scenes, FFmpeg recipes) that cost context on every load. It previews long fenced code blocks in skill Markdown files that could move to reference files; `--apply` writes them under `references_diet/` with backups of the changed files. The preview is the default. It is a narrow Markdown transformation, not a lazy-loading system.
 
 **`fdiet bench`** prints sizes for bundled synthetic examples. The synthetic FFmpeg log is deliberately progress-heavy (99% reduction); that is not a general expectation for quiet logs. Real-run measurements are in [`bench/`](bench).
 
