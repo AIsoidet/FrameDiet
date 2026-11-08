@@ -300,8 +300,37 @@ def to_toon(
     return _encode_primitive(value)
 
 
-def slim_html_dom(html_content: str) -> str:
-    """Replace large HTML payloads with markers while retaining structure."""
+_HTML_START_TAG = re.compile(r"""<[a-zA-Z][\w:-]*(?:"[^"]*"|'[^']*'|[^'">])*>""")
+
+
+def _collapse_attrs(html_content: str, names: tuple[str, ...], min_length: int) -> str:
+    """Collapse long ``class``/``style`` values inside start tags; text nodes are untouched."""
+    attr = re.compile(r"""(?<=\s)(%s)\s*=\s*(?:"([^"]*)"|'([^']*)')""" % "|".join(names), re.IGNORECASE)
+
+    def repl_attr(match: re.Match[str]) -> str:
+        name = match.group(1)
+        value = match.group(2) if match.group(2) is not None else match.group(3)
+        if len(value) < min_length:
+            return match.group(0)
+        if name.lower() == "class":
+            return f'{name}="[CLASSES_OMITTED:{len(value.split())}]"'
+        return f'{name}="[STYLE_OMITTED]"'
+
+    return _HTML_START_TAG.sub(lambda tag: attr.sub(repl_attr, tag.group(0)), html_content)
+
+
+def slim_html_dom(
+    html_content: str,
+    *,
+    strip_classes: bool = False,
+    strip_styles: bool = False,
+    attr_min_length: int = 60,
+) -> str:
+    """Replace large HTML payloads with markers while retaining structure.
+
+    Opt-in reading aids: ``strip_classes`` / ``strip_styles`` collapse ``class`` / ``style``
+    attribute values of at least ``attr_min_length`` characters. Visible text is never removed.
+    """
     # The value class excludes the quote character, so a match can never run
     # past the attribute's closing quote into the following markup.
     output = re.sub(r"""\bd\s*=\s*(?:"[^"]{60,}"|'[^']{60,}')""", 'd="[SVG_PATH]"', html_content)
@@ -323,4 +352,7 @@ def slim_html_dom(html_content: str) -> str:
         output,
         flags=re.IGNORECASE,
     )
+    names = tuple(n for n, on in (("class", strip_classes), ("style", strip_styles)) if on)
+    if names:
+        output = _collapse_attrs(output, names, attr_min_length)
     return output

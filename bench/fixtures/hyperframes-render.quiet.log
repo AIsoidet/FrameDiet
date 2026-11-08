@@ -1,0 +1,80 @@
+[INFO] [Compiler] Fetched 11 font face(s) for "Inter" from Google Fonts (cached to C:\Users\<user>\.cache\hyperframes\fonts\inter)
+[INFO] [Compiler] Injected deterministic @font-face rules for 1 requested font families
+[INFO] [Compiler] Inlined CDN script: https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js
+[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, Intel(R) UHD Graphics (0x000046A3) Direct3D11 vs_5_0 ps_5_0, D3D11)")
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto complete (543ms)
+[initSession:screenshot] GSAP proxy flush complete (556ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (743ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (746ms)
+[initSession:screenshot] applyVideoMetadataHints complete (747ms)
+[initSession:screenshot] media + fonts + tailwind ready (751ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (768ms)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[initSession:screenshot] page.goto start (0ms)
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7977.30, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto start (1ms)
+[initSession:screenshot] page.goto start (1ms)
+[initSession:screenshot] page.goto start (0ms)
+[initSession:screenshot] page.goto complete (2036ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] page.goto complete (2020ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] page.goto complete (2183ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] page.goto complete (1987ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] GSAP proxy flush complete (2087ms)
+[initSession:screenshot] GSAP proxy flush complete (2042ms)
+[initSession:screenshot] GSAP proxy flush complete (2196ms)
+[initSession:screenshot] GSAP proxy flush complete (1996ms)
+[initSession:screenshot] pollHfReady complete (2090ms)
+[initSession:screenshot] pollHfReady complete (1997ms)
+[initSession:screenshot] pollHfReady complete (2046ms)
+[initSession:screenshot] pollHfReady complete (2199ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (2048ms)
+[initSession:screenshot] applyVideoMetadataHints complete (2048ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (2000ms)
+[initSession:screenshot] applyVideoMetadataHints complete (2001ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (2094ms)
+[initSession:screenshot] applyVideoMetadataHints complete (2094ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (2202ms)
+[initSession:screenshot] applyVideoMetadataHints complete (2203ms)
+[initSession:screenshot] media + fonts + tailwind ready (2003ms)
+[initSession:screenshot] media + fonts + tailwind ready (2051ms)
+[initSession:screenshot] media + fonts + tailwind ready (2097ms)
+[initSession:screenshot] media + fonts + tailwind ready (2205ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (2009ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (2058ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (2103ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (2213ms)
+[initSession:screenshot] page.goto complete (3097ms)
+[initSession:screenshot] GSAP proxy flush complete (3120ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] pollHfReady complete (3386ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (3409ms)
+[initSession:screenshot] applyVideoMetadataHints complete (3409ms)
+[initSession:screenshot] media + fonts + tailwind ready (3421ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (3618ms)
+[initSession:screenshot] page.goto complete (4190ms)
+[HyperFrames] render runtime fps {"canonicalFps":30,"source":"render-options","rawFpsSource":"render-options","rawFps":30}
+[initSession:screenshot] GSAP proxy flush complete (4209ms)
+[initSession:screenshot] pollHfReady complete (4215ms)
+[initSession:screenshot] pollSubCompositionTimelines complete (ready) (4283ms)
+[initSession:screenshot] applyVideoMetadataHints complete (4283ms)
+[initSession:screenshot] media + fonts + tailwind ready (4293ms)
+[initSession:screenshot] static-frame dedup: disabled (no GSAP tweens (non-GSAP animation)) (4325ms)
+[FrameCapture] Timed out closing browser; forcing browser process shutdown
+[FrameCapture] Timed out closing browser; forcing browser process shutdown
+[FrameCapture] Timed out closing browser; forcing browser process shutdown
+[FrameCapture] Timed out closing browser; forcing browser process shutdown
+[FrameCapture] Timed out closing browser; forcing browser process shutdown
+[FrameCapture] Timed out closing browser; forcing browser process shutdown

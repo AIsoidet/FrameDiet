@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+# FrameDiet launcher for the Claude Code plugin. FrameDiet has no
+# dependencies, so it runs straight from the plugin's src/ directory.
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# Windows has a "python3" Store alias that exists but does not run,
+# so try each interpreter instead of trusting `command -v`.
+for py in python3 python py; do
+  if command -v "$py" >/dev/null 2>&1 && "$py" -c "import sys; sys.exit(sys.version_info < (3, 10))" >/dev/null 2>&1; then
+    PYTHONPATH="$root/src${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m framediet "$@"
+  fi
+done
+echo "framediet: Python 3.10+ not found (tried python3, python, py)" >&2
+exit 127

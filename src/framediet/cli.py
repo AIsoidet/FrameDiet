@@ -289,6 +289,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     html_parser = commands.add_parser("html", help="Print HTML with large embedded payloads replaced by markers")
     html_parser.add_argument("file", help="Input HTML file; the source file is not modified")
+    html_parser.add_argument("--strip-classes", action="store_true", help="Collapse long class attributes to a marker (visible text is kept)")
+    html_parser.add_argument("--strip-styles", action="store_true", help="Collapse long inline style attributes to a marker")
+    html_parser.add_argument("--attr-min", type=int, default=60, help="Minimum attribute value length to collapse (default 60)")
     return parser
 
 
@@ -392,7 +395,14 @@ def main() -> None:
         elif args.cmd == "slim":
             print(slim_skill_directory(args.path, line_threshold=args.threshold, apply=args.apply))
         elif args.cmd == "html":
-            print(slim_html_dom(Path(args.file).read_text(encoding="utf-8")))
+            print(
+                slim_html_dom(
+                    Path(args.file).read_text(encoding="utf-8"),
+                    strip_classes=args.strip_classes,
+                    strip_styles=args.strip_styles,
+                    attr_min_length=args.attr_min,
+                )
+            )
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:
         print(f"framediet: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc

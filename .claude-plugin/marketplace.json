@@ -1,0 +1,12 @@
+{
+  "name": "framediet",
+  "owner": { "name": "AIsoidet", "url": "https://github.com/AIsoidet" },
+  "description": "FrameDiet: token-saving tools for agents that make video with code.",
+  "plugins": [
+    {
+      "name": "framediet",
+      "source": "./",
+      "description": "Deterministic video QA, compact media context and short render logs for agents that make video with code."
+    }
+  ]
+}

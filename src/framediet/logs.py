@@ -24,7 +24,16 @@ PROGRESS_NOISE = re.compile(
     r"\[download\]\s*\d+(?:\.\d+)?%|"
     r"Fra:\d+\s+Mem:|Animation \d+:.*%|"
     r"\s*\d+%\|[█▏▎▍▌▋▊▉ ]*|"
-    r"\s*[#=<>. ]+\s*\d+%"
+    r"\s*[#=<>. ]+\s*\d+%|"
+    # HyperFrames: block-char bars, per-stage percent lines, machine progress,
+    # and internal chatter (trace JSON, per-worker browser/session setup).
+    r"[█░▒▓]+\s+\d+%|"
+    r"\d+%\s+(?:Compiling|Extracting|Processing|Starting|Checking|Measuring|Capturing|Encoding|Assembling)|"
+    r"@hf-progress\s|"
+    r"\[initSession:|\[BrowserManager\] Browser launched|\[HyperFrames\] render runtime fps|"
+    r"\[INFO\] \[Render:trace\]|\[INFO\] Calibration|\[INFO\] Launching browser for capture calibration|"
+    r"\[INFO\] Initializing calibration session|\[INFO\] streaming-encode gate|"
+    r"\[INFO\] \[Render\] (?:Encoded frames while capturing|Calibration config|Pipeline started)"
     r")"
 )
 

@@ -1,0 +1,10 @@
+{
+  "name": "framediet",
+  "version": "0.1.0",
+  "description": "Spend fewer tokens when an agent makes video with code: deterministic video QA, compact transcripts and media context, and short render logs for Remotion, HyperFrames and FFmpeg.",
+  "author": { "name": "AIsoidet", "url": "https://github.com/AIsoidet" },
+  "homepage": "https://github.com/AIsoidet/FrameDiet",
+  "repository": "https://github.com/AIsoidet/FrameDiet",
+  "license": "MIT",
+  "keywords": ["video", "ffmpeg", "remotion", "hyperframes", "whisper", "tokens", "qa"]
+}

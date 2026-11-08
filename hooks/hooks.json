@@ -1,0 +1,13 @@
+{
+  "description": "FrameDiet: shorten progress-heavy media commands (ffmpeg encodes, remotion/hyperframes renders, yt-dlp downloads). Returns no permission decision.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/framediet\" hook" }
+        ]
+      }
+    ]
+  }
+}

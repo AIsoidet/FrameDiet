@@ -14,9 +14,22 @@ No required dependencies. `ffmpeg` and `ffprobe` on `PATH` for the video command
 
 Every row is one real run on one project; token counts use `cl100k_base`, which is a proxy and not Claude's tokenizer. Limits are written next to each result.
 
+**One whole Claude Code session**, real usage from `claude -p --output-format json` (Opus 5.5, Claude Code 2.1.319): re-encode a 20 s clip with 4 known defects, then find them. Two runs each, same prompt, one project with FrameDiet's skill text and one without.
+
+| | Cost per run | Turns | Cache-read tokens | Output tokens | Defects found |
+|---|---:|---:|---:|---:|---:|
+| Without FrameDiet (mean of 2) | $0.58 | 15.5 | 619,094 | 8,410 | 4 of 4 |
+| With FrameDiet (mean of 2) | $0.26 | 9 | 293,476 | 1,992 | 4 of 4 |
+
+The plain agent wrote its own FFmpeg detectors, Python analysis and spectrograms; the FrameDiet agent ran `framediet qa`. The saving came from that, not from the log hook (the agents piped their encodes through `tail`, which the hook leaves alone). n=2, one task, one synthetic clip. [Details](bench/e2e-session.md)
+
+**Single steps**, `cl100k_base` proxy counts:
+
 | Question | Without FrameDiet | With FrameDiet | Notes |
 |---|---:|---:|---|
 | Remotion render log, 90 frames, default verbosity | 1,529 tokens | 175 | `--log=error` gives 28 but drops composition, codec and output path. [Details](bench/logs-three-columns.md) |
+| HyperFrames 0.9.23 render log, 10 s blank example | 7,191 tokens | 362 | `--quiet` gives 1,798 and no longer prints the output path. [Details](bench/hyperframes-log.md) |
+| Frame-sampling rules of two critic-loop skills (motion-video-kit, remotion-director) on the defect clip | 1–9 images, about 1,500–13,800 vision tokens, 1–3 of 4 defects in frame | `fdiet qa`, about 224 text tokens, 4 of 4 | Image sampling alone; both skills also ship their own numeric checks, which were not run. Audio cannot appear in a frame. [Details](bench/critic-loop.md) |
 | Find defects in a 30 s clip (4 injected: 2 black flashes, 1 s freeze, audio over 0 dBFS) | 27 full frames, about 42,000 vision tokens, found 1 of 4 | `fdiet qa` report, about 224 tokens, found 4 of 4 | Vision tokens are estimates from the documented formula, not measured. One clip: it shows the mechanism, not a detection rate. [Details](bench/frames-vs-qa.md) |
 | Whisper word timestamps, 50 words (synthetic) | 2,047 tokens | 463 | Synthetic fixture. |
 
@@ -24,13 +37,34 @@ Not claimed: a fixed percentage saving, total-conversation savings, or that `qa`
 
 ## Install
 
+**As a Claude Code plugin** (hook, skill and the `framediet` command in one step, next to any video skill you already use):
+
+```text
+/plugin marketplace add AIsoidet/FrameDiet
+/plugin install framediet@framediet
+```
+
+From a shell: `claude plugin marketplace add AIsoidet/FrameDiet`, then `claude plugin install framediet@framediet`. The plugin needs Python 3.10+ on `PATH` (it runs from source; there are no dependencies) and FFmpeg for the video commands. The plugin's hook is the same as `fdiet init`; do not install both, or remove the `framediet hook` entry from `.claude/settings.json`.
+
+**As a Python CLI** (any agent, scripts, CI):
+
 ```bash
 pip install git+https://github.com/AIsoidet/FrameDiet.git
 ```
 
 From a checkout: `python -m pip install -e .`. Optional `pip install -e ".[benchmark]"` adds `tiktoken` for the proxy token counts in `bench`.
 
-`framediet` and the short alias `fdiet` are the same command. Windows, macOS and Linux are supported by the code; the live Claude Code check below was done on Windows only.
+`framediet` and the short alias `fdiet` are the same command.
+
+### For skill authors
+
+The hook catches direct `ffmpeg`/`remotion`/`hyperframes` calls only. If your skill renders through its own script or pipes output through `tail`, add the check to the script itself, after the render:
+
+```bash
+framediet qa out.mp4 --strict          # one-line verdict; exit 1 on WARN
+```
+
+and tell the agent in your SKILL.md to read that verdict before sampling frames, and to use `framediet frames <video> <times>` only at the reported timestamps. Windows, macOS and Linux are supported by the code; the live Claude Code check below was done on Windows only.
 
 ## Quick start
 
@@ -85,7 +119,7 @@ Words the aligner could not time (WhisperX leaves `start` and `end` off tokens s
 
 **`fdiet probe <path>`** summarizes stream metadata for one media file, or dependencies, likely source files and media assets for a project directory. For video streams it adds `WARN` lines when the display is rotated (for example phone footage with `rotation=90`) or the frame rate looks variable (average rate more than 2% off the base rate, a heuristic), the two usual reasons a preview drifts from the audio.
 
-**`fdiet html <file>`** prints HTML with long SVG paths (`d` values of 60 characters or more), base64 data URIs and inline script and style bodies replaced by markers. Short paths, other attributes and text stay as they are. It is a reading aid; the source file is not changed.
+**`fdiet html <file>`** prints HTML with long SVG paths (`d` values of 60 characters or more), base64 data URIs and inline script and style bodies replaced by markers. Short paths, other attributes and text stay as they are. `--strip-classes` and `--strip-styles` also collapse long `class` and `style` values. On three landing pages the default removed 73–78% of the tokens and `--strip-classes` up to a further 46% (Tailwind-heavy page); the result was still 12–47 times the visible text. HyperFrames' own website workflow does not feed raw HTML to the model (it captures screenshots, visible text and computed styles), so this helps only when an agent reads a saved page itself. [Details](bench/website-html.md). It is a reading aid; the source file is not changed.
 
 ### Layer 3: shorten command output
 
@@ -100,7 +134,7 @@ Words the aligner could not time (WhisperX leaves `start` and `end` off tokens s
 
 `ffprobe`, `whisper`, `ffmpeg -version`/`-filters`/`-i file`, `remotion compositions`, `studio` and any `--help` pass through untouched, because their output is the data you asked for. So do pipes, chains, redirects and other shell syntax. To skip the hook for one call, prefix it with `command` (`command ffmpeg -i a.mp4 b.mp4`). The hook returns no permission decision, so your configured approvals stay in force.
 
-Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) a hooked `ffmpeg` call came back as the `[OK] FrameDiet: ...` summary without `frame=` progress lines. Claude Code's documentation says permission rules are evaluated against the input the hook returns. Not tested: auto mode, interactive approval prompts, other versions or platforms.
+Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) a hooked `ffmpeg` call came back as the `[OK] FrameDiet: ...` summary without `frame=` progress lines. Claude Code's documentation says permission rules are evaluated against the input the hook returns. The same check passed with the plugin loaded through `claude --plugin-dir` and no pip-installed `framediet` on `PATH`: the hook ran the plugin's `bin/framediet` launcher and the rewritten call resolved to it. Not tested: auto mode, interactive approval prompts, installing from the marketplace, other versions or platforms.
 
 ### Layer 4: housekeeping
 
