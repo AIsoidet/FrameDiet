@@ -4,7 +4,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-54%20passing-brightgreen.svg)](tests)
+[![tests](https://github.com/AIsoidet/FrameDiet/actions/workflows/tests.yml/badge.svg)](https://github.com/AIsoidet/FrameDiet/actions/workflows/tests.yml)
 
 When an AI agent renders and checks a video, most of its context goes to things a script could answer: per-frame render logs, dozens of screenshots to find a black frame, word-level caption JSON. FrameDiet is a small CLI that gives the agent the answer instead of the raw material, and keeps the numbers public so you can check them.
 
@@ -83,7 +83,7 @@ Words the aligner could not time (WhisperX leaves `start` and `end` off tokens s
 
 **`fdiet digest <Scene.tsx>`** prints a bounded index of Remotion `Composition`, `Sequence`, section and media tags with line ranges. It is a heuristic index, not a JSX parser, and does not infer rendered timing.
 
-**`fdiet probe <path>`** summarizes stream metadata for one media file, or dependencies, likely source files and media assets for a project directory.
+**`fdiet probe <path>`** summarizes stream metadata for one media file, or dependencies, likely source files and media assets for a project directory. For video streams it adds `WARN` lines when the display is rotated (for example phone footage with `rotation=90`) or the frame rate looks variable (average rate more than 2% off the base rate, a heuristic), the two usual reasons a preview drifts from the audio.
 
 **`fdiet html <file>`** prints HTML with long SVG paths, base64 data URIs and inline script and style bodies replaced by markers. It is a reading aid; the source file is not changed.
 

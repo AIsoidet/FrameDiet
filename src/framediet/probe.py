@@ -12,6 +12,7 @@ import math
 import os
 import shutil
 import subprocess
+from fractions import Fraction
 from itertools import islice
 from pathlib import Path
 from typing import Any, Iterator
@@ -69,6 +70,7 @@ def _run_ffprobe(
     entries = (
         "format=" + ",".join(_FORMAT_FIELDS)
         + ":stream=" + ",".join(_STREAM_FIELDS)
+        + ":stream_tags=rotate:stream_side_data=rotation"
     )
     command = [
         executable,
@@ -152,7 +154,49 @@ def _media_report(
         index = stream.get("index", "?")
         fields = [f"{field}={stream[field]}" for field in _STREAM_FIELDS if field in stream]
         lines.append(f"stream #{index} [{kind}]: " + " | ".join(fields))
+        if kind == "video":
+            lines.extend(f"WARN stream #{index}: {note}" for note in stream_warnings(stream))
     return "\n".join(lines)
+
+
+def _rate(value: Any) -> float | None:
+    try:
+        rate = float(Fraction(str(value)))
+    except (ValueError, ZeroDivisionError):
+        return None
+    return rate if math.isfinite(rate) and rate > 0 else None
+
+
+def stream_warnings(stream: dict[str, Any]) -> list[str]:
+    """Flag video traits that make previews drift from the audio.
+
+    Rotation comes from the display-matrix side data (or the legacy ``rotate``
+    tag). Variable frame rate is inferred when the average rate differs from
+    the base rate by more than 2%, which is a heuristic, not proof.
+    """
+    notes: list[str] = []
+    rotation: Any = None
+    side_data = stream.get("side_data_list")
+    if isinstance(side_data, list):
+        for item in side_data:
+            if isinstance(item, dict) and "rotation" in item:
+                rotation = item["rotation"]
+    tags = stream.get("tags")
+    if rotation is None and isinstance(tags, dict):
+        rotation = tags.get("rotate")
+    try:
+        degrees = int(float(rotation)) % 360 if rotation is not None else 0
+    except (TypeError, ValueError):
+        degrees = 0
+    if degrees:
+        notes.append(f"rotation={degrees} (display is rotated; width/height are stored sizes)")
+    avg, base = _rate(stream.get("avg_frame_rate")), _rate(stream.get("r_frame_rate"))
+    if avg is not None and base is not None and abs(avg - base) / base > 0.02:
+        notes.append(
+            f"variable frame rate likely (avg {avg:.2f} fps vs base {base:.2f} fps); "
+            "consider re-encoding to constant frame rate before editing"
+        )
+    return notes
 
 
 def _walk_project(root: Path, max_scanned_files: int) -> Iterator[Path]:
