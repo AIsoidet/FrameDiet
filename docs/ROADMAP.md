@@ -26,7 +26,7 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 
 ## Next: 0.1.0 release
 
-1. **Install path proven:** install the plugin from the GitHub marketplace on a clean profile (`/plugin marketplace add AIsoidet/FrameDiet`), on Windows and on one of macOS or Linux. Document any Python-on-PATH issue found.
+1. **Install path:** Windows marketplace install checked 2026-11-08 (plugin enabled, 0.1.0). Still to check: one of macOS or Linux, and that the hook fires from the marketplace install. Document any Python-on-PATH issue found.
 2. **PyPI:** upload 0.1.0 by hand per `docs/RELEASE.md`, then switch to Trusted Publishing from a tagged GitHub Actions release.
 3. **Tag and release:** `v0.1.0` tag, GitHub release notes that list what is measured and what is not.
 4. **Plugin icon:** a square PNG for the plugin directory. It follows the channel's brand book, which is frozen, so it is the owner's call.
