@@ -302,12 +302,14 @@ def to_toon(
 
 def slim_html_dom(html_content: str) -> str:
     """Replace large HTML payloads with markers while retaining structure."""
-    output = re.sub(r"\bd\s*=\s*([\"']).{60,}?\1", 'd="[SVG_PATH]"', html_content, flags=re.DOTALL)
+    # The value class excludes the quote character, so a match can never run
+    # past the attribute's closing quote into the following markup.
+    output = re.sub(r"""\bd\s*=\s*(?:"[^"]{60,}"|'[^']{60,}')""", 'd="[SVG_PATH]"', html_content)
     output = re.sub(
-        r"\b(src|href)\s*=\s*([\"'])data:[^;\"']+;base64,.*?\2",
+        r"""\b(src|href)\s*=\s*(?:"data:[^;"']+;base64,[^"]*"|'data:[^;"']+;base64,[^']*')""",
         lambda match: f'{match.group(1)}="[BASE64_DATA_URI]"',
         output,
-        flags=re.IGNORECASE | re.DOTALL,
+        flags=re.IGNORECASE,
     )
     output = re.sub(
         r"<script\b([^>]*)>[\s\S]*?</script\s*>",

@@ -17,7 +17,7 @@ Commands (run from the AI_Channel `video/` project, output outside this reposito
 - Raw output grows with frame count: Remotion prints one `Rendered N/total, time remaining` line per frame. This sample covers 90 frames; a full-length render would have proportionally more lines, but that longer run was not measured here.
 - Existing local workflows already run Remotion with `--log=error` (for example the FosterVox render log, 33 lines) or print two summary lines (`kinetic-test/film/render.log`, 122 bytes). On those, log compression saves little. The measured gain applies to default-verbosity runs.
 - The measured compact output still contained ANSI colour escape sequences and one `Encoded N/total` line per progress step. The current `logs.py` strips ANSI sequences and filters `Encoded` progress lines.
-- The table above is the historical result of the pre-cleanup compressor. The raw logs of a repeat run are kept in `bench/fixtures/`, and [`logs-three-columns.md`](logs-three-columns.md) gives the current numbers (render 1,529 to 164 tokens, bundle 140 to 84). The shell `time` lines (`real/user/sys`) were included in all counts.
+- The table above is the historical result of the pre-cleanup compressor. The raw logs of a repeat run are kept in `bench/fixtures/`, and [`logs-three-columns.md`](logs-three-columns.md) gives the current numbers (render 1,529 to 175 tokens, bundle 140 to 95). The shell `time` lines (`real/user/sys`) were included in all counts.
 
 ## Limits
 

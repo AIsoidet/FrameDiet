@@ -4,10 +4,10 @@ Script: `bench/three_columns.py`. Fixtures in `bench/fixtures/` are the raw stdo
 
 | Run | Default output (tokens) | `--log=error` (tokens) | `fdiet exec` (tokens) |
 |---|---:|---:|---:|
-| `remotion render`, 90 frames | 1,529 | 28 | 164 |
-| `remotion bundle` | 140 | n/a (not run) | 84 |
+| `remotion render`, 90 frames | 1,529 | 28 | 175 |
+| `remotion bundle` | 140 | n/a (not run) | 95 |
 
-Earlier compressor, before the ANSI and `Encoded` fixes, on the same raw logs: 213 tokens for render and 90 for bundle (measured with the version of `logs.py` in commit `fd27cff`). The fixtures can be re-run, so the current numbers are reproducible.
+Since 2026-11-08 the summary header states how many lines it kept (`Showing 9 of 108 lines (99 progress).`), which costs about 11 tokens; before that change the same logs gave 164 and 84. Earlier compressor, before the ANSI and `Encoded` fixes, on the same raw logs: 213 tokens for render and 90 for bundle (measured with the version of `logs.py` in commit `fd27cff`). The fixtures can be re-run, so the current numbers are reproducible.
 
 ## What each column keeps
 

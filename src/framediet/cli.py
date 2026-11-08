@@ -22,17 +22,100 @@ from framediet.toon import slim_html_dom, to_toon
 from framediet.transcripts import compress_whisper, is_whisper_json
 from framediet.vlm_sheet import create_contact_sheet
 
-DIRECT_BINARIES = {"ffmpeg", "ffprobe", "manim", "whisper", "faster-whisper", "yt-dlp"}
+# Only tools whose output is mostly progress noise are rewritten. ffprobe and
+# whisper are left alone: their output is the data the agent asked for.
+DIRECT_BINARIES = {"ffmpeg", "manim", "yt-dlp"}
 NODE_MEDIA_TOOLS = {"hyperframes", "remotion"}
+NODE_RENDER_SUBCOMMANDS = {"render", "still", "bundle", "benchmark"}
 SHELL_SYNTAX = re.compile(r"(?:&&|\|\||[;|&<>`()\r\n]|\$\()")
+
+_COMMON_INFO_FLAGS = {"-h", "-help", "--help", "-version", "--version", "-?"}
+_FFMPEG_INFO_FLAGS = {
+    "-buildconf", "-formats", "-demuxers", "-muxers", "-devices", "-codecs",
+    "-decoders", "-encoders", "-bsfs", "-protocols", "-filters", "-pix_fmts",
+    "-layouts", "-sample_fmts", "-dispositions", "-colors", "-hwaccels", "-l", "-L",
+    "-sources", "-sinks",
+}
+# Filters whose log lines are the result: summarizing them would drop data.
+_FFMPEG_ANALYSIS = re.compile(
+    r"(?:blackdetect|blackframe|freezedetect|silencedetect|cropdetect|scdet|"
+    r"astats|ebur128|volumedetect|loudnorm|showinfo|ashowinfo|idet|signalstats|"
+    r"metadata=print|ametadata=print|bbox|psnr|ssim|vmaf)",
+    re.IGNORECASE,
+)
+_YTDLP_INFO_FLAGS = {
+    "-F", "--list-formats", "-j", "--dump-json", "-J", "--dump-single-json",
+    "--print", "-O", "--print-to-file", "-g", "--get-url", "-e", "--get-title",
+    "--get-id", "--get-filename", "--get-duration", "--get-format", "--get-thumbnail",
+    "--get-description", "-s", "--simulate", "--list-subs", "--list-thumbnails",
+    "--list-extractors", "--extractor-descriptions", "-U", "--update",
+}
+_MANIM_INFO_SUBCOMMANDS = {"cfg", "checkhealth", "plugins", "init"}
 
 
 def _basename(token: str) -> str:
     return token.replace("\\", "/").rsplit("/", 1)[-1].lower()
 
 
+def _strip_exe(name: str) -> str:
+    for suffix in (".exe", ".cmd"):
+        if name.endswith(suffix):
+            return name[: -len(suffix)]
+    return name
+
+
+_FFMPEG_NO_VALUE = {
+    "-y", "-n", "-hide_banner", "-nostats", "-stats", "-nostdin", "-stdin", "-shortest",
+    "-an", "-vn", "-sn", "-dn", "-re", "-copyts", "-start_at_zero", "-benchmark",
+    "-benchmark_all", "-dump", "-hex", "-ignore_unknown", "-copy_unknown", "-accurate_seek",
+    "-noaccurate_seek", "-autorotate", "-noautorotate", "-autoscale", "-noautoscale",
+}
+_NULL_OUTPUTS = {"-", "pipe:", "pipe:1", "pipe:2", "/dev/null", "nul"}
+
+
+def _ffmpeg_outputs(args: list[str]) -> list[str]:
+    """Positional ffmpeg arguments, i.e. output targets (inputs follow -i)."""
+    outputs: list[str] = []
+    index = 0
+    while index < len(args):
+        token = args[index]
+        if token.startswith("-") and len(token) > 1:
+            index += 1 if token in _FFMPEG_NO_VALUE else 2
+            continue
+        outputs.append(token)
+        index += 1
+    return outputs
+
+
+def _option_values(args: list[str], option: str) -> set[str]:
+    return {args[i + 1].lower() for i, arg in enumerate(args[:-1]) if arg == option}
+
+
+def _is_noisy_invocation(tool: str, args: list[str]) -> bool:
+    """Return whether this call mainly prints progress, not requested data."""
+    flags = set(args)
+    if flags & _COMMON_INFO_FLAGS:
+        return False
+    if tool == "ffmpeg":
+        if not args or flags & _FFMPEG_INFO_FLAGS:
+            return False
+        if any(_FFMPEG_ANALYSIS.search(arg) for arg in args):
+            return False
+        outputs = _ffmpeg_outputs(args)
+        # Without a real output file (ffmpeg -i x, -f null -, stdout) the
+        # printed stream info or measurements are the point of the call.
+        return bool(outputs) and not any(out.lower() in _NULL_OUTPUTS for out in outputs) and "null" not in _option_values(args, "-f")
+    if tool == "yt-dlp":
+        return bool(args) and not any(arg.split("=", 1)[0] in _YTDLP_INFO_FLAGS for arg in args)
+    if tool == "manim":
+        return bool(args) and args[0] not in _MANIM_INFO_SUBCOMMANDS
+    if tool in NODE_MEDIA_TOOLS:
+        return bool(args) and args[0].lower() in NODE_RENDER_SUBCOMMANDS
+    return False
+
+
 def is_safe_media_command(command: str) -> bool:
-    """Accept only a single direct media executable call without shell syntax."""
+    """Accept only a single direct, progress-heavy media call without shell syntax."""
     if not command or SHELL_SYNTAX.search(command):
         return False
     try:
@@ -44,15 +127,17 @@ def is_safe_media_command(command: str) -> bool:
     if not tokens:
         return False
 
-    first = _basename(tokens[0])
+    first = _strip_exe(_basename(tokens[0]))
     if first in {"framediet", "fdiet"}:
         return False
-    if first in DIRECT_BINARIES or first in {f"{name}.exe" for name in DIRECT_BINARIES}:
-        return True
-    if first in {"npx", "npx.cmd", "bunx", "bunx.cmd"} and len(tokens) >= 2:
-        return _basename(tokens[1]) in NODE_MEDIA_TOOLS
-    if first in {"pnpm", "pnpm.cmd"} and len(tokens) >= 3:
-        return tokens[1].lower() in {"exec", "dlx"} and _basename(tokens[2]) in NODE_MEDIA_TOOLS
+    if first in DIRECT_BINARIES:
+        return _is_noisy_invocation(first, tokens[1:])
+    if first in {"npx", "bunx"} and len(tokens) >= 2:
+        tool = _basename(tokens[1])
+        return tool in NODE_MEDIA_TOOLS and _is_noisy_invocation(tool, tokens[2:])
+    if first == "pnpm" and len(tokens) >= 3 and tokens[1].lower() in {"exec", "dlx"}:
+        tool = _basename(tokens[2])
+        return tool in NODE_MEDIA_TOOLS and _is_noisy_invocation(tool, tokens[3:])
     return False
 
 

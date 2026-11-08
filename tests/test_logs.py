@@ -44,6 +44,34 @@ def test_only_progress_is_ok_marker():
     assert out.startswith("[OK]")
 
 
+def test_success_summary_says_how_much_was_omitted():
+    raw = "\n".join(f"key_{i}=value" for i in range(100))
+    out = compress_output(["ffprobe", "-show_streams", "a.mp4"], 0, raw, "")
+    header = out.splitlines()[0]
+    assert "of 100 lines" in header
+    assert "`command ffprobe ...`" in header
+
+
+def test_progress_only_omission_has_no_bypass_hint():
+    progress = "\n".join(f"frame={i} fps=30" for i in range(50))
+    out = compress_output(["ffmpeg", "-i", "a", "b.mp4"], 0, "", progress + "\nOutput #0, mp4, to 'b.mp4':")
+    assert "(50 progress)." in out
+    assert "Full output" not in out
+
+
+def test_short_success_output_is_complete_without_note():
+    out = compress_output(["ffmpeg"], 0, "", "Output #0, mp4, to 'b.mp4':")
+    assert out.splitlines()[0] == "[OK] FrameDiet: command completed successfully."
+
+
+def test_analysis_lines_are_kept_on_success():
+    filler = "\n".join(f"[Parsed_astats_0 @ 0x1] Channel stat {i}" for i in range(40))
+    raw = f"[blackdetect @ 0x1] black_start:2 black_end:2.3 black_duration:0.3\n{filler}\n[Parsed_astats_0 @ 0x1] Peak level dB: -3.1\n" + filler
+    out = compress_output(["ffmpeg", "-i", "a"], 0, "", raw)
+    assert "black_start:2" in out
+    assert "Peak level dB: -3.1" in out
+
+
 def test_ffprobe_json_known_shape_is_summarized():
     raw = (
         '{"streams":[{"index":0,"codec_type":"video","codec_name":"h264",'

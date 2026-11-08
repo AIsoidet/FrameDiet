@@ -20,7 +20,11 @@ Use FrameDiet when a video task produces verbose CLI logs, word-level transcript
 
 ## Safety and accuracy
 
-- The Claude Code hook only rewrites direct, single media commands and leaves shell chains and operators untouched.
+- The Claude Code hook only rewrites direct, single, progress-heavy calls (an `ffmpeg` encode with an output file, a `yt-dlp` download, a `manim` render, `remotion`/`hyperframes` `render`/`still`/`bundle`). `ffprobe`, `whisper`, FFmpeg analysis filters, listings and `--help` pass through, as do shell chains and operators.
+- A summary header such as `Showing 12 of 116 lines` means lines were dropped. Prefix the call with `command` (`command ffmpeg ...`) to get the full output without the hook.
+- `framediet qa --strict` exits 1 on `WARN`, for render scripts and CI.
+- In a transcript, `word[?]` means the source has no timing for that word; do not invent one.
+- `framediet probe <file>` prints `WARN` lines for rotated video and a likely variable frame rate; handle those before cutting to audio.
 - The hook preserves Claude Code's normal permission policy. Do not add an automatic allow decision.
 - Transcript timestamps are rounded to milliseconds and optional confidence data is omitted.
 - `--precision` on JSON-to-TOON conversion is lossy by design; omit it when preserving floating-point values matters.

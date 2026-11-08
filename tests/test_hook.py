@@ -8,15 +8,47 @@ from framediet.cli import install_claude_hook, is_safe_media_command
 
 @pytest.mark.parametrize("command", [
     "ffmpeg -i a.mp4 b.mp4",
-    "ffprobe -v error a.mp4",
+    "ffmpeg -y -i a.mp4 -c:v libx264 -crf 20 b.mp4",
+    "ffmpeg -i a.mp4 -vf scale=720:-2 -an b.mp4 -y",
     "yt-dlp https://example.com/v",
+    "yt-dlp -f best -o out.mp4 https://example.com/v",
     "npx remotion render src/index.tsx Reel out.mp4",
     "npx hyperframes render",
     "pnpm exec remotion still",
+    "manim -pql scene.py Intro",
     r"C:\tools\ffmpeg.exe -i a.mp4 b.mp4",
 ])
-def test_single_media_commands_are_rewritten(command):
+def test_progress_heavy_media_commands_are_rewritten(command):
     assert is_safe_media_command(command)
+
+
+@pytest.mark.parametrize("command", [
+    # The printed output is the data the agent asked for.
+    "ffprobe -v error -show_streams a.mp4",
+    "ffprobe -of json -show_format a.mp4",
+    "ffmpeg -version",
+    "ffmpeg -filters",
+    "ffmpeg -hide_banner -codecs",
+    "ffmpeg -i a.mp4",
+    "ffmpeg -i a.mp4 -af astats -f null -",
+    "ffmpeg -i a.mp4 -vf blackdetect=d=0.1 -f null /dev/null",
+    "ffmpeg -i a.mp4 -af volumedetect -f null NUL",
+    "ffmpeg -i a.mp4 -f null -",
+    "ffmpeg -i a.mp4 -af ebur128 out.wav",
+    "whisper audio.mp3 --model small",
+    "yt-dlp -F https://example.com/v",
+    "yt-dlp --dump-json https://example.com/v",
+    "yt-dlp --print title https://example.com/v",
+    "yt-dlp --help",
+    "npx remotion compositions src/index.tsx",
+    "npx remotion studio",
+    "npx remotion --help",
+    "npx remotion render --help",
+    "manim cfg show",
+    "command ffmpeg -i a.mp4 b.mp4",
+])
+def test_data_producing_commands_are_left_alone(command):
+    assert not is_safe_media_command(command)
 
 
 @pytest.mark.parametrize("command", [

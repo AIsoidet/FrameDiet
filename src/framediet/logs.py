@@ -28,6 +28,13 @@ PROGRESS_NOISE = re.compile(
     r")"
 )
 
+METADATA_MARKERS = (
+    "stream #", "duration:", "output #", "rendered", "saved", "done", "created",
+    # FFmpeg analysis filters print their results as log lines.
+    "black_start", "freeze_start", "freeze_end", "silence_start", "silence_end",
+    "peak level db", "mean_volume", "max_volume", "integrated loudness", "lufs",
+)
+
 CRITICAL_KEYWORDS = (
     "error", "exception", "traceback", "failed", "invalid", "fatal",
     "cannot", "not found", "no such", "syntaxerror", "typeerror",
@@ -158,10 +165,17 @@ def compress_output(
     # stream/output metadata that appeared earlier.
     metadata = [
         line for line in clean
-        if any(marker in line.lower() for marker in ("stream #", "duration:", "output #", "rendered", "saved", "done", "created"))
+        if any(marker in line.lower() for marker in METADATA_MARKERS)
     ]
     selected = list(dict.fromkeys(metadata + clean[-12:]))[-MAX_SUMMARY_LINES:]
-    return "[OK] FrameDiet: command completed successfully.\n" + "\n".join(selected)
+    header = "[OK] FrameDiet: command completed successfully."
+    omitted = len(lines) - len(selected)
+    if omitted > 0:
+        dropped_progress = len(lines) - len(clean)
+        header += f" Showing {len(selected)} of {len(lines)} lines ({dropped_progress} progress)."
+        if omitted - dropped_progress > 0:
+            header += f" Full output: `command {executable or 'tool'} ...`"
+    return header + "\n" + "\n".join(selected)
 
 
 def exec_and_compress(command: Sequence[str]) -> tuple[int, str]:

@@ -16,7 +16,7 @@ Every row is one real run on one project; token counts use `cl100k_base`, which 
 
 | Question | Without FrameDiet | With FrameDiet | Notes |
 |---|---:|---:|---|
-| Remotion render log, 90 frames, default verbosity | 1,529 tokens | 164 | `--log=error` gives 28 but drops composition, codec and output path. [Details](bench/logs-three-columns.md) |
+| Remotion render log, 90 frames, default verbosity | 1,529 tokens | 175 | `--log=error` gives 28 but drops composition, codec and output path. [Details](bench/logs-three-columns.md) |
 | Find defects in a 30 s clip (4 injected: 2 black flashes, 1 s freeze, audio over 0 dBFS) | 27 full frames, about 42,000 vision tokens, found 1 of 4 | `fdiet qa` report, about 224 tokens, found 4 of 4 | Vision tokens are estimates from the documented formula, not measured. One clip: it shows the mechanism, not a detection rate. [Details](bench/frames-vs-qa.md) |
 | Whisper word timestamps, 50 words (synthetic) | 2,047 tokens | 463 | Synthetic fixture. |
 
@@ -85,13 +85,20 @@ Words the aligner could not time (WhisperX leaves `start` and `end` off tokens s
 
 **`fdiet probe <path>`** summarizes stream metadata for one media file, or dependencies, likely source files and media assets for a project directory. For video streams it adds `WARN` lines when the display is rotated (for example phone footage with `rotation=90`) or the frame rate looks variable (average rate more than 2% off the base rate, a heuristic), the two usual reasons a preview drifts from the audio.
 
-**`fdiet html <file>`** prints HTML with long SVG paths, base64 data URIs and inline script and style bodies replaced by markers. It is a reading aid; the source file is not changed.
+**`fdiet html <file>`** prints HTML with long SVG paths (`d` values of 60 characters or more), base64 data URIs and inline script and style bodies replaced by markers. Short paths, other attributes and text stay as they are. It is a reading aid; the source file is not changed.
 
 ### Layer 3: shorten command output
 
-**`fdiet exec -- <command>`** runs a command directly (no shell), removes progress lines and ANSI codes, and keeps a bounded set of diagnostics. A failing command returns its exit code and the last diagnostic lines, with critical lines such as `FATAL` kept even after long noise. Successful runs are summarized, so run the command yourself when you need the full log.
+**`fdiet exec -- <command>`** runs a command directly (no shell), removes progress lines and ANSI codes, and keeps a bounded set of diagnostics. A failing command returns its exit code and the last diagnostic lines, with critical lines such as `FATAL` kept even after long noise. A successful run keeps the tail, stream and output metadata, and the result lines of FFmpeg analysis filters (`black_start`, `Peak level dB`, `mean_volume` and similar). When it drops anything, the header says so: `Showing 9 of 108 lines (99 progress).`, plus `Full output: command ffmpeg ...` when non-progress lines were dropped too.
 
-**`fdiet init`** adds a Claude Code `PreToolUse` hook for the `Bash` tool. It rewrites only a single, direct call of `ffmpeg`, `ffprobe`, `yt-dlp`, `manim`, `whisper`, `faster-whisper`, or `npx`/`bunx`/`pnpm` with `remotion` or `hyperframes`, into `framediet exec -- ...`. Pipes, chains, redirects and other shell syntax pass through untouched. The hook returns no permission decision, so your configured approvals stay in force.
+**`fdiet init`** adds a Claude Code `PreToolUse` hook for the `Bash` tool. It rewrites into `framediet exec -- ...` only a single, direct call whose output is mostly progress:
+
+- `ffmpeg` with a real output file (not `-f null`, `-` or `/dev/null`) and no analysis filter such as `blackdetect`, `astats`, `volumedetect` or `ebur128`;
+- `yt-dlp` downloads (not `-F`, `--dump-json`, `--print`, `-g`, `--simulate` and other listing flags);
+- `manim` renders;
+- `npx`/`bunx`/`pnpm exec` with `remotion` or `hyperframes` and the `render`, `still`, `bundle` or `benchmark` subcommand.
+
+`ffprobe`, `whisper`, `ffmpeg -version`/`-filters`/`-i file`, `remotion compositions`, `studio` and any `--help` pass through untouched, because their output is the data you asked for. So do pipes, chains, redirects and other shell syntax. To skip the hook for one call, prefix it with `command` (`command ffmpeg -i a.mp4 b.mp4`). The hook returns no permission decision, so your configured approvals stay in force.
 
 Live check: on Claude Code 2.1.319 (Windows, `claude -p --allowedTools Bash`, default permission mode) a hooked `ffmpeg` call came back as the `[OK] FrameDiet: ...` summary without `frame=` progress lines. Claude Code's documentation says permission rules are evaluated against the input the hook returns. Not tested: auto mode, interactive approval prompts, other versions or platforms.
 
