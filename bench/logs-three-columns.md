@@ -2,6 +2,9 @@
 
 Script: `bench/three_columns.py`. Fixtures in `bench/fixtures/` are the raw stdout+stderr of real Remotion runs on the local PixelFX reel project (90 frames, `--frames=0-89`), captured with a shell `time` wrapper, so the three `real/user/sys` lines are included in every count. Token counts use `cl100k_base`, a proxy and not Claude's tokenizer. The `fdiet exec` column uses the current `logs.py`, which strips ANSI sequences and filters `Encoded N/M` lines.
 
+Re-measured after the successful encoder-stat filtering change on 2026-11-08; the reported counts stayed the same.
+Successful codec-stat lines now count as progress noise; failed-command diagnostics remain visible.
+
 | Run | Default output (tokens) | `--log=error` (tokens) | `fdiet exec` (tokens) |
 |---|---:|---:|---:|
 | `remotion render`, 90 frames | 1,529 | 28 | 175 |

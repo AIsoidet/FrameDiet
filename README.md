@@ -31,7 +31,7 @@ The plain agent wrote its own FFmpeg detectors, Python analysis and spectrograms
 | Find a phrase's times and count words in a 60 s WhisperX JSON | $0.23 | $0.23 | All correct; the file is small, so no gain |
 | Render a HyperFrames project and check the output | $0.43 | $0.44 | All correct; no gain. Each FrameDiet run lost 2–3 turns on a wrong `frames` flag |
 
-The hook fired in none of these runs. The agents piped renders through `tail`, and wrote `npx --yes hyperframes@0.9.23 render`, a form the hook does not match yet. A separate check with a plain `ffmpeg` encode showed the plugin hook does fire. So the saving is in QA-heavy work; on light tasks FrameDiet costs about the same. [Details](bench/e2e-tasks.md)
+The hook fired in none of these runs. The agents piped renders through `tail`, which the hook deliberately leaves untouched. At measurement time the direct `npx --yes hyperframes@0.9.23 render` form was also unrecognized; it is now covered. A separate check with a plain `ffmpeg` encode showed the plugin hook does fire. So the saving is in QA-heavy work; on light tasks FrameDiet costs about the same. [Details](bench/e2e-tasks.md)
 
 **Single steps**, `cl100k_base` proxy counts:
 
@@ -64,7 +64,7 @@ pip install git+https://github.com/AIsoidet/FrameDiet.git
 
 From a checkout: `python -m pip install -e .`. Optional `pip install -e ".[benchmark]"` adds `tiktoken` for the proxy token counts in `bench`.
 
-`framediet` and the short alias `fdiet` are the same command. Windows, macOS and Linux are supported by the code; CI runs the tests on Linux and Windows, and the live Claude Code checks were done on Windows only. A PyPI package is prepared but not published yet ([docs/RELEASE.md](docs/RELEASE.md)).
+`framediet` and the short alias `fdiet` are the same command. Windows, macOS and Linux are supported by the code; CI runs tests with FFmpeg on Linux and Windows, and the live Claude Code checks were done on Windows only. A PyPI package is prepared but not published yet ([docs/RELEASE.md](docs/RELEASE.md)).
 
 ### For skill authors
 
@@ -109,7 +109,7 @@ Both outputs were produced by the current version on a generated clip and a hand
 
 ### Layer 1: check a render (QA and vision)
 
-**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). Without flags it always exits 0, even on `WARN`, so an agent can read the verdict. Add `--strict` and it exits 1 on `WARN`, so a render script or CI job can fail on its own (invalid input or a missing FFmpeg exits 2). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others).
+**`fdiet qa <video>`** runs FFmpeg's `blackdetect`, `freezedetect`, `cropdetect` and `astats` and prints one summary line plus a line per warning. `--frames-dir` extracts small JPEG previews at the start of each black or freeze interval (up to 36). `--json` prints the report as JSON, including `notes`; when combined with `--frames-dir`, preview paths go to stderr. Without flags it always exits 0, even on `WARN`, so an agent can read the verdict. Add `--strict` and it exits 1 on `WARN`, so a render script or CI job can fail on its own (invalid input or a missing FFmpeg exits 2). Thresholds are flags (`--freeze-min-duration`, `--audio-peak-warn-dbfs`, and others).
 
 Motion graphics hold still on purpose, so stills and black are split into warnings and `note:` lines. Notes never change `PASS`/`WARN` or the `--strict` exit code:
 
@@ -120,9 +120,9 @@ Motion graphics hold still on purpose, so stills and black are split into warnin
 
 On the channel's published PixelFX reel this turned 4 freeze warnings into notes (`PASS`). On a diagram animation (`flow.mp4`, 10 fps) one 1.1 s pause still warns. The defect clips still give all 4 injected defects as warnings. The 0.75 s default comes from these two videos, not from a survey; change it for your pacing. `cropdetect` reports removable borders, not a content bounding box.
 
-**`fdiet sheet <video> --grid 3x3`** builds a timestamped contact sheet. It reduces the number of images, but small details are harder to see in a grid, and in our test a 3x3 sheet did not show a 0.2 s black flash. Use it for overall structure, and `qa` for defects. Existing files are not overwritten without `--overwrite`. If your FFmpeg build has no default font, pass `--font-file`.
+**`fdiet sheet <video> --grid 3x3`** builds a timestamped contact sheet. It reduces the number of images, but small details are harder to see in a grid, and in our test a 3x3 sheet did not show a 0.2 s black flash. Use it for overall structure, and `qa` for defects. Existing files are not overwritten without `--overwrite`. Each FFmpeg tool call has a 60-second timeout by default; change it with `--timeout`. If your FFmpeg build has no default font, pass `--font-file`.
 
-**`fdiet frames <video> 4.2 7.5 10.0`** writes bounded, timestamp-named JPEG previews and reports source and preview sizes. The quality option is FFmpeg's qscale, not a percentage.
+**`fdiet frames <video> 4.2 7.5 10.0 -o previews`** writes bounded, timestamp-named JPEG previews to `previews` and reports source and preview sizes. `-o` aliases `--out-dir`. The quality option is FFmpeg's qscale, not a percentage.
 
 On image cost: [Anthropic's vision docs](https://platform.claude.com/docs/en/build-with-claude/vision) count 28x28 patches after model-tier-specific resizing. FrameDiet does not estimate image tokens, because the receiving model and tier are not known to it.
 
@@ -144,12 +144,14 @@ Words the aligner could not time (WhisperX leaves `start` and `end` off tokens s
 
 **`fdiet exec -- <command>`** runs a command directly (no shell), removes progress lines and ANSI codes, and keeps a bounded set of diagnostics. A failing command returns its exit code and the last diagnostic lines, with critical lines such as `FATAL` kept even after long noise. A successful run keeps the tail, stream and output metadata, and the result lines of FFmpeg analysis filters (`black_start`, `Peak level dB`, `mean_volume` and similar). When it drops anything, the header says so: `Showing 9 of 108 lines (99 progress).`, plus `Full output: command ffmpeg ...` when non-progress lines were dropped too.
 
+On successful encodes `exec` also drops final codec statistics; those lines remain visible on failures.
+
 **`fdiet init`** adds a Claude Code `PreToolUse` hook for the `Bash` tool. It rewrites into `framediet exec -- ...` only a single, direct call whose output is mostly progress:
 
 - `ffmpeg` with a real output file (not `-f null`, `-` or `/dev/null`) and no analysis filter such as `blackdetect`, `astats`, `volumedetect` or `ebur128`;
 - `yt-dlp` downloads (not `-F`, `--dump-json`, `--print`, `-g`, `--simulate` and other listing flags);
 - `manim` renders;
-- `npx`/`bunx`/`pnpm exec` with `remotion` or `hyperframes` and the `render`, `still`, `bundle` or `benchmark` subcommand.
+- direct `remotion`/`hyperframes` binaries, or `npx`/`bunx`/`pnpm exec|dlx` with those tools and the `render`, `still`, `bundle` or `benchmark` subcommand; package flags, scoped Remotion CLI and package versions are recognized.
 
 `ffprobe`, `whisper`, `ffmpeg -version`/`-filters`/`-i file`, `remotion compositions`, `studio` and any `--help` pass through untouched, because their output is the data you asked for. So do pipes, chains, redirects and other shell syntax. To skip the hook for one call, prefix it with `command` (`command ffmpeg -i a.mp4 b.mp4`). The hook returns no permission decision, so your configured approvals stay in force.
 

@@ -13,6 +13,9 @@ npx hyperframes render --quiet -o renders/b.mp4    # quiet variant
 
 The blank example is a 1920x1080, 30 fps, 10 s composition (300 frames), rendered with 6 workers; the render took 28 s and produced a 29 KB MP4. Both runs exited 0.
 
+Re-measured after the successful encoder-stat filtering change on 2026-11-08; the reported counts stayed the same.
+Successful codec-stat lines now count as progress noise; failed-command diagnostics remain visible.
+
 | Run | Default output (tokens) | `--quiet` (tokens) | `fdiet exec`, default log (tokens) | `fdiet exec`, `--quiet` log (tokens) |
 |---|---:|---:|---:|---:|
 | `hyperframes render`, 10 s blank | 7,191 | 1,798 | 362 | 199 |

@@ -6,9 +6,10 @@ FrameDiet gives an agent that makes video with code the answer instead of the ra
 
 Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 
-- **Commands:** `qa` (with `--strict` and hold notes), `frames`, `sheet`, `json` (transcripts, TOON), `digest`, `probe` (rotation and VFR warnings), `html` (with `--strip-classes`/`--strip-styles`), `exec`, `init`/`hook`, `slim`, `bench`.
+- **Commands:** `qa` (with `--strict`, `--json` and hold notes), `frames` (including `-o`), `sheet` (with timeouts), `json` (transcripts, TOON), `digest`, `probe` (rotation and VFR warnings), `html` (with `--strip-classes`/`--strip-styles`), `exec`, `init`/`hook`, `slim`, `bench`.
 - **Claude Code plugin:** hook, skill and a `bin/framediet` launcher that runs from source. The repo is its own marketplace. Validated with `claude plugin validate`, live-checked with `--plugin-dir`.
-- **Tests:** 115 in `tests/`, run by CI on Linux and Windows with Python 3.10 and 3.12. None of them runs FFmpeg.
+- **Hook fixes:** npx/bunx/pnpm and direct Remotion/HyperFrames render commands are recognized; plugin installs invoke their own launcher. Data-producing commands and shell chains still pass through.
+- **Tests:** 142 in `tests/`, run by CI on Linux and Windows with Python 3.10 and 3.12; CI installs FFmpeg for generated-clip end-to-end coverage.
 - **Evidence in `bench/`:**
   - end-to-end sessions on real usage: defect QA $0.58 → $0.26 and $0.61 → $0.43 per run; transcript and render tasks about equal; n=2 per arm;
   - render logs: Remotion 1,529 → 175 tokens, HyperFrames 7,191 → 362;
@@ -33,20 +34,15 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 
 ## 0.2: stronger evidence and fewer blind spots
 
-- **Fixes found by the three-task run** (`bench/e2e-tasks.md`), first because they cost turns today:
-  - the hook does not match `npx --yes <tool>@<version> render`, the form HyperFrames' own `package.json` scripts use, nor a bare `hyperframes render`;
-  - agents tried `framediet frames … -o` in 4 of 6 runs; accept `-o` as an alias of `--out-dir`, and make the skill text show the exact flags.
+- **Closed defects from the three-task run and 08.11 audit:** hook package parsing and plugin launcher selection, `frames -o`, successful encoder-stat filtering, FFmpeg end-to-end CI tests, `qa --json`, `digest`/`slim`/`sheet` housekeeping, and Python/Markdown LF normalization. The render-log scripts were rerun after T4; their token counts were unchanged.
 - **More end-to-end tasks.** Results of the three-task run: QA reel −29% with no false title-card claim; transcript lookup and HyperFrames render +0–3%, because the work is light and the hook did not fire. Next: 5 runs per arm instead of 2, one non-Opus model, and a "nudged plain" arm whose prompt names the FFmpeg filters. That arm shows how much of the gain is just knowing which checks to run.
-- **FFmpeg in CI.** Install FFmpeg in the workflow and run `qa`, `frames`, `sheet`, `probe` and `exec` end to end on generated clips with known defects. The two bugs found in the audit (`html` eating markup, hidden truncation) would have been caught this way.
 - **Hook coverage.** In the real session the agents wrote `ffmpeg … | tail -5`, and the hook correctly left that alone. Plan:
   - an opt-in list of extra commands to wrap (for example a skill's `scripts/render.sh`), in plugin `userConfig` or an environment variable;
   - deciding, with data, whether `<render command> 2>&1 | tail -N` should become `framediet exec`. It already shortens the output, so the gain may be too small to justify rewriting pipes.
 - **Auto mode.** Test the hook under Claude Code's auto mode. The docs say a changed input can be denied there.
-- **`qa --json`.** The report already has `as_dict()`; expose it so render scripts and other tools can read the verdict without parsing text.
 - **`qa` thresholds on more videos.** The 0.75 s held-beat default comes from two of the channel's videos. Collect 10–20 real renders of different kinds (motion graphics, talking head, screen recording) and report the warning and note counts per kind before changing the default.
 - **Loudness.** Add integrated loudness (EBU R128) next to the peak check, because platforms normalize to about −14 LUFS and the channel already mixes to it.
 - **Transcripts:** read `whisper-ctranslate2` and `parakeet-mlx` JSON from real output files; keep WhisperX word-level `speaker` when present; compare the TOON encoder with the reference implementation.
-- **Housekeeping:** quieter `digest` (skip attribute-less `<div>` sections), `slim` exit code 2 on a missing directory, timeouts in `sheet`.
 
 ## 0.3: integration with existing video skills
 
