@@ -10,7 +10,9 @@ reports per category:
   carried  token-calls: tokens x number of later API calls that re-read them
            (until the next compaction)
   units    cost in "input-token equivalents": cache write x2 (1h TTL),
-           cache read x0.1, output x5. Ratios, not dollars.
+           cache read x0.05, output x5. Ratios, not dollars. They are fitted
+           to the dollar cost of the 12 runs in e2e-tasks.md (about 8, 0.2
+           and 20 USD per million tokens), not taken from a price list.
 
 Ground truth from the API usage fields is printed next to the estimates so
 the proxy error is visible. Only aggregate numbers are printed; no
@@ -37,7 +39,7 @@ except Exception:  # pragma: no cover - fallback without tiktoken
     def ntok(text: str) -> int:
         return len(text.encode("utf-8")) // 4
 
-W_WRITE, W_WRITE_5M, W_READ, W_OUT = 2.0, 1.25, 0.1, 5.0
+W_WRITE, W_WRITE_5M, W_READ, W_OUT = 2.0, 1.25, 0.05, 5.0
 INLINE = re.compile(r"<<-?\s*['\"]?\w+|\bpython3?\s+-c\b|\bnode\s+(-e|--eval)\b|\bpwsh\b.*-Command")
 RENDER = re.compile(r"\b(remotion\s+(render|still)|hyperframes\s+(render|snapshot)|ffmpeg|manim|playwright|puppeteer|screenshot)\b")
 LISTING = {"skill_listing", "deferred_tools_delta", "agent_listing_delta", "mcp_instructions_delta",

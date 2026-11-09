@@ -35,6 +35,8 @@ The plain agent wrote its own FFmpeg detectors, Python analysis and spectrograms
 
 The hook fired in none of these runs. The agents piped renders through `tail`, which the hook deliberately leaves untouched. At measurement time the direct `npx --yes hyperframes@0.9.23 render` form was also unrecognized; it is now covered. A separate check with a plain `ffmpeg` encode showed the plugin hook does fire. So the saving is in QA-heavy work; on light tasks FrameDiet costs about the same. [Details](bench/e2e-tasks.md)
 
+**Four real video-creation sessions** (45 to 879 API calls, Remotion and an isometric-figure skill), split by what filled the context. The model's own output (code, inline scripts, replies) is 25–54% of the cost and the starting context 16–32%; frames are 7–10% and render logs 1–3%. FrameDiet does not touch the two largest items, so it cannot cut most of the cost of generating a video. [Details](bench/session-breakdown.md)
+
 **Single steps**, `cl100k_base` proxy counts:
 
 | Question | Without FrameDiet | With FrameDiet | Notes |
