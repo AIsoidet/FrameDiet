@@ -24,6 +24,85 @@ Shipped in `main`, version 0.1.0, not yet tagged or on PyPI:
 - **Claims follow measurements.** A number reaches the README only with its raw inputs and a script in `bench/`, and with its limits written next to it. No fixed percentage claims.
 - **Stay small.** No required dependencies; FFmpeg is the only external tool. Opt-in flags instead of changed defaults.
 
+## Priority track: cost of generating a video (added 2026-11-09)
+
+`bench/session-breakdown.md` measured four real sessions. During generation the cost is the model's own output (25–54%) and the starting context (16–32%); frames are 7–10% and render logs 1–3%. The shipped commands touch only the last two. This track goes after the first two.
+
+Most steps change the video project and the Claude Code setup, not FrameDiet's code. Each step says where it lives. The percentages are estimates from the breakdown, not measured savings, and they overlap, so they do not add up.
+
+Steps are ordered by expected saving per unit of work. Do them in order; each one is measured before the next starts.
+
+### Step 0. Reference task and baseline (required first)
+
+- **What:** fix one task that is repeated after every step: build a 20–30 s vertical reel of 4 scenes from the existing brand components, render it, check it. Same prompt, same assets, every time.
+- **Where:** the prompt and assets go in `bench/fixtures/generation-task/`; results go in a new `bench/generation-track.md`.
+- **How to measure:** run the task, then `python bench/session_breakdown.py <session.jsonl>`. Record cost units, the output share, the baseline share, API calls and whether the reel is acceptable. Two runs per arm at least.
+- **Done when:** the baseline row (everything on Opus, one session, current setup) is in `bench/generation-track.md`.
+- **Note:** this is a paid run with a render. Ask the owner before each run.
+
+### Step 1. A cheaper model writes scenes, the main model reviews
+
+- **What:** the main model plans, a cheaper model executes, the main model reviews.
+  - **Plan (main model):** concept, the list of scenes, and a brief per scene: text on screen, timing in frames, which existing components to use, colours, what moves and when. The brief is short text, a few hundred tokens for the whole reel, so it costs little at the top price and decides most of the quality.
+  - **Write (cheaper model):** a subagent with a pinned model implements one scene from its brief in its own context and returns a short report. It makes no creative decisions; if the brief is unclear it asks instead of inventing.
+  - **Review (main model):** 2–3 stills per scene against the brief, not the code. A fix goes back to the writer as a one-line correction.
+- **Where:** in the video project: `.claude/agents/scene-writer.md` with `model: sonnet` (then try `haiku`), and a rule in the project's video workflow doc that scenes are written only through it. The agent prompt must say: edit files with Edit, never rewrite a whole file that already exists; report in under 10 lines.
+- **Expected:** 30–45% with Sonnet, more with Haiku if quality holds. It also keeps scene code out of the main context, which replaces "one session per scene".
+- **Risk:** a weaker model needs more render-and-fix rounds. Count them.
+- **Done when:** the reference task passes with the writer on Sonnet, and the row is in `bench/generation-track.md` with the number of fix rounds. `session_breakdown.py` skips subagent traffic today; add subagent usage to it first, or the saving will be overstated.
+
+### Step 2. A scene is data, not code
+
+- **What:** the model writes a short JSON spec per scene (component name, text, timing, colours); a fixed renderer in the video project turns it into the composition from a catalog of existing components. New code is written only for an effect the catalog does not have.
+- **Where:** in the video project, on top of its component library. First compare two routes on the reference task: the `json-render` Remotion skill from `vercel-labs/json-render`, and a thin own renderer (one `SpecReel.tsx` that maps spec entries to the existing components). Pick the smaller one that reproduces the reference reel.
+- **Expected:** the largest cut in output tokens. In the lab session 120 whole-file rewrites cost 250,380 output tokens; a spec edit is a few lines. It also makes Haiku a realistic writer.
+- **Risk:** the catalog limits what a reel can look like. Keep the code route for new effects and then add the effect to the catalog.
+- **Done when:** the reference reel is rebuilt from a spec, a scene is at most 40 lines of JSON, and the row is in `bench/generation-track.md`.
+- **FrameDiet's part:** none in the renderer (see "Not planned"). Optional later: `fdiet spec-check <spec.json>` that validates timing and missing assets without a render.
+
+### Step 3. Lean starting context for video sessions
+
+- **What:** the first call already holds 70–79 thousand tokens of skill, tool and MCP listings. Disable what a video session never uses.
+- **Where:** project-level Claude Code settings of the video project: turn off unrelated plugins, skills and MCP servers there, not globally.
+- **Expected:** 8–16%. The most reliable step: it applies to every call of every session.
+- **Done when:** first-call context of a new session in the video project is under 40 thousand tokens (the `first-call context` line of `session_breakdown.py`), and the reference task still passes.
+
+### Step 4. Session rules
+
+- **What:** three rules that cost nothing to adopt:
+  - do not resume a session after more than an hour of idle time, start a new one (one measured session spent 20% of its cost on rebuilding the cache);
+  - Edit, not Write, for a file that already exists;
+  - low reasoning effort and terse replies for the scene writer (thinking is 4–8% of the cost, replies 6–8%).
+- **Where:** the video project's workflow doc and the `scene-writer` agent prompt.
+- **Done when:** the rules are written there and the next reference run shows zero `Write over a file already written` and a cache-rebuild share under 5%.
+
+### Step 5. Frames only where a check points
+
+- **What:** run `framediet qa` first; read a frame only at a time the report flags, plus one still per scene the first time a scene is built. Frames at 768 px on the long side, not 1,440 or more.
+- **Where:** FrameDiet: confirm the default size of `frames` previews and add a `--max-side` default of 768 if it is larger; the skill text states the order. Video project: the review rule from step 1.
+- **Expected:** 4–6%.
+- **Risk:** a small frame can hide a layout defect. Measure on the defect clip and on one real reel whether a reviewer still catches a text overflow at 768 px.
+- **Done when:** that check is in `bench/`, and the default is changed only if nothing is missed.
+
+### Step 6. Ready commands instead of inline scripts
+
+- **What:** in the lab session 401 inline scripts cost 242,373 output tokens. Find what they were for, then build commands for the most common purposes.
+- **Where:** FrameDiet. First add a mode to `bench/session_breakdown.py` that groups inline scripts by the tools they call (ffprobe, ffmpeg filters, image libraries) and prints counts only. Then build the top two or three. Candidates already known: integrated loudness (EBU R128, planned in 0.2) and a duration check against a spec or EDL.
+- **Expected:** 2–6%.
+- **Done when:** the grouping is in `bench/`, and each new command has a before/after row on the reference task.
+
+### Step 7. Skill text for anatomy
+
+- **What:** in the anatomy session the skill and its references were 16.5% of the cost (32,507 tokens in 45 calls). Remotion sessions do not have this problem.
+- **Where:** see "Later: anatomy/SVG domain" below; `fdiet slim` is the existing tool. Needs the skill author's consent for anything upstream.
+- **Done when:** one anatomy figure is built before and after, with both rows in `bench/`.
+
+### Not worth doing on this track
+
+- A general compressor for command output (RTK, Headroom and similar): render and media output is 1–3% of a generation session.
+- Extending the hook to `npm run` and pipes: same reason.
+- A third-party model router: the `model:` field of a subagent and `CLAUDE_CODE_SUBAGENT_MODEL` already do step 1.
+
 ## Next: 0.1.0 release
 
 1. **Install path:** Windows marketplace install checked 2026-11-08 (plugin enabled, 0.1.0). Still to check: one of macOS or Linux, and that the hook fires from the marketplace install. Document any Python-on-PATH issue found.
